@@ -1,0 +1,59 @@
+services:
+  web:
+    build: .
+    restart: unless-stopped
+    ports: ['${APP_PORT:-3080}:3000']
+    environment:
+      DB_HOST: db
+      DB_NAME: amanda
+      DB_USER: amanda
+      DB_PASSWORD: ${DB_PASSWORD:?Defina DB_PASSWORD}
+      MINIO_HOST: minio
+      MINIO_USER: ${MINIO_USER:?Defina MINIO_USER}
+      MINIO_PASSWORD: ${MINIO_PASSWORD:?Defina MINIO_PASSWORD}
+      MINIO_BUCKET: momentos
+      ADMIN_TOKEN: ${ADMIN_TOKEN:?Defina ADMIN_TOKEN}
+    depends_on:
+      db:
+        condition: service_healthy
+      minio-ready:
+        condition: service_healthy
+  db:
+    image: mariadb:11.4
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: amanda
+      MARIADB_USER: amanda
+      MARIADB_PASSWORD: ${DB_PASSWORD}
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?Defina DB_ROOT_PASSWORD}
+    volumes: ['db_data:/var/lib/mysql']
+    healthcheck:
+      test: ['CMD', 'healthcheck.sh', '--connect', '--innodb_initialized']
+      interval: 5s
+      timeout: 5s
+      retries: 30
+  minio:
+    image: coollabsio/minio:RELEASE.2025-04-22T22-12-26Z
+    command: server /data --console-address ':9001'
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: ${MINIO_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD}
+    ports: ['127.0.0.1:9091:9001']
+    volumes: ['photos:/data']
+  minio-ready:
+    image: node:24-bookworm-slim
+    restart: unless-stopped
+    command: ['node', '-e', 'setInterval(() => {}, 3600000)']
+    depends_on:
+      minio:
+        condition: service_started
+    healthcheck:
+      test: ['CMD', 'node', '-e', "fetch('http://minio:9000/minio/health/ready', {signal: AbortSignal.timeout(4000)}).then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
+volumes:
+  db_data:
+  photos:

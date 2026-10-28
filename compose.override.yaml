@@ -1,0 +1,17 @@
+services:
+  amanda-tailscale:
+    image: tailscale/tailscale:stable
+    restart: unless-stopped
+    network_mode: service:web
+    entrypoint: ['tailscaled']
+    command:
+      - --tun=userspace-networking
+      - --state=/var/lib/tailscale/tailscaled.state
+      - --socket=/var/run/tailscale/tailscaled.sock
+    volumes:
+      - amanda_tailscale:/var/lib/tailscale
+    depends_on:
+      web:
+        condition: service_started
+volumes:
+  amanda_tailscale:
