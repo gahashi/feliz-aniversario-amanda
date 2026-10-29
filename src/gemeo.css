@@ -1,0 +1,269 @@
+/* Página independente: todas as regras são limitadas à rota /gemeo. */
+.gem-page-body {margin:0; background:#11291f;}
+.gem-root, .gem-root *, .gem-root *::before, .gem-root *::after {box-sizing:border-box}
+.gem-root {
+  --gem-green:#b3d394; --gem-dark:#10281e; --gem-cream:#fbf1d4; --gem-lime:#c7dc8a; --gem-paper:#f7efda;
+  position:relative; isolation:isolate; min-height:100svh; overflow:hidden;
+  color:var(--gem-cream); background:#143e2d;
+  font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+}
+.gem-root button {font:inherit; cursor:pointer}
+.gem-root button:disabled {cursor:default}
+.gem-root h1,.gem-root h2,.gem-root p {margin:0}
+.gem-root h1:focus {outline:none}
+.gem-root :focus-visible {outline:3px solid #f4d37b;outline-offset:5px}
+.gem-coast {
+  position:fixed; z-index:-4; inset:0; background-size:cover; background-position:center 56%;
+  filter: brightness(.36) saturate(.65) hue-rotate(15deg) contrast(1.06);
+  transform:scale(1.04); pointer-events:none;
+}
+.gem-root::before {content:"";position:fixed;z-index:-3;inset:0;pointer-events:none;background:
+  linear-gradient(180deg,rgba(9,31,23,.52),rgba(8,43,34,.68) 43%,rgba(6,23,19,.94)),
+  radial-gradient(ellipse at 74% 30%, rgba(233,173,95,.33),transparent 48%);}
+.gem-sun-glow {position:fixed;z-index:-2;width:80vw;max-width:720px;aspect-ratio:1;top:-30vw;right:-15vw;
+  border-radius:50%; background:radial-gradient(circle,rgba(245,199,121,.14),rgba(234,158,88,.045) 48%,transparent 69%);pointer-events:none;}
+.gem-horizon {position:fixed;z-index:-2;pointer-events:none;inset:auto 0 0;height:24vh;opacity:.28;overflow:hidden}
+.gem-horizon span {position:absolute;left:-8%;bottom:20%;width:125%;height:100px;border-top:2px solid rgba(213,228,185,.34);border-radius:50% 55% 0 0;transform:rotate(-2deg)}
+.gem-horizon span:nth-child(2){bottom:5%;left:-28%;transform:rotate(2deg);border-color:#9ac3a25e}
+.gem-horizon span:nth-child(3){bottom:-9%;left:6%;transform:rotate(-4deg);border-color:#e2d3a142}
+.gem-noise{position:fixed;z-index:30;inset:0;pointer-events:none;opacity:.15;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.6' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.28'/%3E%3C/svg%3E")}
+.gem-header {width:min(1150px,100%);margin:auto;padding:26px clamp(20px,4vw,45px);display:flex;align-items:center;justify-content:space-between;gap:12px;position:relative;z-index:4}
+.gem-back {border:1px solid #fcf4d13d;color:#f8f3df;display:inline-flex;align-items:center;gap:9px;text-decoration:none;border-radius:90px;padding:9px 12px;font-size:12px;white-space:nowrap;background:#13302690}
+.gem-back:hover{background:#f4efda24}
+.gem-brand{font-size:12px;letter-spacing:2px;font-weight:800;white-space:nowrap}
+.gem-brand b{color:#e5ce78;font-size:16px;margin:0 1px}
+.gem-made-by{font-size:11px;color:#f6e8b9b5;white-space:nowrap}
+.gem-screen {width:min(1080px,100%);margin:auto;position:relative;z-index:2;padding:35px clamp(22px,5vw,58px) 56px;min-height:calc(100svh - 137px)}
+.gem-overline{font-size:10px;letter-spacing:2.4px;font-weight:850;color:#d7dfa7;text-transform:uppercase}
+.gem-intro {display:grid;grid-template-columns:minmax(0,1.05fr) minmax(300px,.95fr);align-items:center;gap:48px}
+.gem-intro-copy{max-width:550px}
+.gem-intro-copy h1 {font:400 clamp(55px,6.5vw,92px)/.99 Georgia,'Times New Roman',serif;letter-spacing:-3px;margin:18px 0 25px;text-wrap:balance}
+.gem-intro-copy h1 em {font-style:italic;color:#cedd9d}
+.gem-lead {font-size:clamp(15px,1.4vw,18px);line-height:1.75;max-width:420px;color:#ecf1dbc7}
+.gem-lighting-area {min-width:0;position:relative;max-width:440px;width:100%;margin:auto;background:linear-gradient(160deg,#e8d3a51c,#324d3873);border:1px solid #d4e0b042;border-radius:36px;min-height:440px;padding:24px;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 22px 80px #071b1680, inset 0 1px #f1eddc1f}
+.gem-lighting-area::after {content:"";position:absolute;inset:12px;border:1px solid #e7e8c218;border-radius:27px;pointer-events:none}
+.gem-lighting-top{position:absolute;top:25px;left:28px;right:28px;display:flex;justify-content:space-between;align-items:center;gap:7px;font-size:9px;letter-spacing:1.3px;color:#e9ebc6a8}
+.gem-lighting-top span:last-child {color:#d6c783;font-size:18px}
+.gem-lighter-button {border:0;background:transparent;color:inherit;display:flex;flex-direction:column;align-items:center;gap:23px;touch-action:manipulation;min-height:304px;justify-content:flex-end;padding:0 25px 10px;position:relative;z-index:2}
+.gem-lighter-button:not(:disabled):active .gem-lighter {transform:rotate(-3deg) scale(.97)}
+.gem-lighter {height:249px;width:110px;position:relative;display:block;transform-origin:bottom center;transition:transform .16s ease;filter:drop-shadow(19px 21px 17px #09241c8e)}
+.gem-lighter-shell {position:absolute;left:10px;right:10px;top:56px;bottom:5px;border-radius:10px 12px 19px 20px;background:linear-gradient(100deg,#165337 0%,#236f4b 22%,#2c8660 55%,#194b35 100%);border:2px solid #113b2a;box-shadow:inset 3px 0 4px #a1d6a12b,inset -6px 0 9px #092c1e7a;overflow:hidden}
+.gem-lighter-shell::before {content:"";position:absolute;left:0;right:0;top:0;height:7px;border-radius:60%;background:#18422e}
+.gem-lighter-shine{position:absolute;top:12px;left:11px;width:7px;height:77%;border-radius:7px;background:linear-gradient(#e1f2c54f,#c8e9bf07)}
+.gem-lighter-sticker{position:absolute;left:13px;right:13px;top:47px;height:80px;border:1px solid #e4c57a81;border-radius:5px;background:#132e23;display:flex;align-items:center;justify-content:center;flex-direction:column;transform:rotate(-3deg);color:#f9e4a4;gap:2px;box-shadow:0 4px 6px #0a20194d}
+.gem-lighter-sticker span:first-child{font:bold 19px/1 Georgia,serif;letter-spacing:-.5px}
+.gem-lighter-sticker span:nth-child(2){font:700 7px/1.3 sans-serif;letter-spacing:1px}
+.gem-lighter-sticker b{font-size:22px;line-height:1;color:#d5d47e}
+.gem-lighter-brand{position:absolute;bottom:19px;left:0;right:0;text-align:center;transform:rotate(-90deg);transform-origin:center;font-size:7px;white-space:nowrap;letter-spacing:1px;color:#e2edc68c}
+.gem-lighter-head{position:absolute;z-index:4;left:17px;top:24px;width:77px;height:48px;border:1px solid #555a54;border-radius:13px 13px 3px 3px;background:linear-gradient(100deg,#9a9f98,#e3e6de 28%,#8e968b 65%,#525c54);box-shadow:inset 0 4px 4px #fafbf27e}
+.gem-lighter-head::after{content:"";position:absolute;top:0;left:21px;width:29px;height:30px;background:#28322d;border-radius:0 0 12px 12px;box-shadow:inset 0 -3px 4px #b9bdb88f}
+.gem-lighter-wheel{position:absolute;left:-11px;top:9px;width:25px;height:21px;background:repeating-linear-gradient(90deg,#6e766f,#c0c5bf 2px,#5b615c 3px);border:1px solid #c9c6bb;border-radius:10px;transform:rotate(-14deg)}
+.gem-lighter-neck{position:absolute;left:32px;top:-12px;width:15px;height:13px;background:#686f69;border-radius:3px 3px 0 0}
+.gem-lighter-flame {position:absolute;z-index:5;left:41px;top:-31px;width:29px;height:66px;opacity:0;transform:scale(.2) translateY(45px);transform-origin:bottom center;transition:opacity .3s,transform .45s;filter:drop-shadow(0 0 17px #eeb84a)}
+.gem-lighter-flame::before{content:"";position:absolute;inset:0;background:linear-gradient(#ffe39f,#eea543 60%,#ff7a42);clip-path:polygon(53% 0,88% 39%,100% 68%,79% 100%,13% 100%,0 67%,27% 41%);border-radius:45% 45% 38% 36%;animation:gem-flame-flicker .5s ease-in-out infinite alternate}
+.gem-lighter-flame span {position:absolute;z-index:2;width:11px;height:28px;bottom:0;left:9px;background:linear-gradient(#fffce6,#fff2a5);border-radius:50% 50% 25% 25%}
+.gem-is-lit .gem-lighter-flame{opacity:1;transform:scale(1) translateY(0)}
+.gem-sparks{position:absolute;z-index:6;top:0;left:51%;width:1px;height:1px;pointer-events:none}
+.gem-sparks i {position:absolute;width:5px;height:5px;background:#f5cf73;border-radius:50%;animation:gem-spark-pop .45s ease-out both}
+.gem-sparks i:nth-child(1){--sx:-30px;--sy:-15px}.gem-sparks i:nth-child(2){--sx:22px;--sy:-35px}.gem-sparks i:nth-child(3){--sx:-13px;--sy:-45px}.gem-sparks i:nth-child(4){--sx:33px;--sy:-5px}.gem-sparks i:nth-child(5){--sx:-43px;--sy:6px}
+.gem-tap-prompt {font-size:11px;letter-spacing:2px;font-weight:850;color:#f6df9e;white-space:nowrap}
+.gem-lighting-feedback{z-index:2;text-align:center;min-height:57px;margin-top:6px}
+.gem-lighting-feedback p{font-size:12px;color:#ecf1d6d9;min-height:20px}
+.gem-attempt-dots{display:flex;justify-content:center;gap:9px;margin-top:12px}
+.gem-attempt-dots i{display:block;width:8px;height:8px;border-radius:50%;border:1px solid #e9ddb480;transition:background .2s}
+.gem-attempt-dots .gem-active-dot{background:#eac06f;border-color:#eac06f;box-shadow:0 0 8px #efd18370}
+.gem-bottom-note{position:absolute;bottom:21px;left:clamp(22px,5vw,58px);right:clamp(22px,5vw,58px);text-align:center;letter-spacing:1.8px;font-size:10px;color:#f5edc78e}
+.gem-bottom-note span{color:#eccb80;margin-left:10px}
+
+.gem-burn-screen{min-height:calc(100svh - 137px);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:18px}
+.gem-burn-heading{font:400 clamp(36px,4.2vw,60px)/1.13 Georgia,serif;letter-spacing:-1.8px}
+.gem-burn-heading em{color:#d6dfa8}
+.gem-roll-wrap{width:min(420px,84vw);height:174px;position:relative;display:flex;align-items:center;justify-content:center;margin:22px 0 2px}
+.gem-roll {position:relative;display:flex;width:100%;height:36px;transform:rotate(-8deg);filter:drop-shadow(0 12px 10px #061711b0)}
+.gem-roll-filter{width:20%;height:100%;border-radius:5px 0 0 5px;background:repeating-linear-gradient(90deg,#8d6143 0,#a6724b 7px,#b88c61 8px);border:1px solid #ad8a6c}
+.gem-roll-paper{flex:1;position:relative;height:100%;background:linear-gradient(180deg,#e5d2b0,#f6e6c9 47%,#c6ac86);border:1px solid #e8d4b2;border-radius:0 10px 9px 0;overflow:hidden}
+.gem-roll-seam{position:absolute;top:18px;left:0;right:0;height:1px;background:#9d80616a}
+.gem-roll-burn{position:absolute;inset:0 0 0 auto;width:0;background:#1a1b17;box-shadow:9px 0 22px 7px #bb542c;animation:gem-burn-across 4.1s linear forwards}
+.gem-roll-ember{position:absolute;z-index:2;width:10px;height:38px;right:0;top:-1px;border-radius:30%;background:linear-gradient(90deg,#6e2418,#f5b156,#f1e19a);box-shadow:0 0 18px #f0a354;animation:gem-ember-move 4.1s linear forwards}
+.gem-roll-smoke{position:absolute;top:-5px;right:10px;width:100px;height:85px}
+.gem-roll-smoke i{position:absolute;left:50%;bottom:0;width:30px;height:30px;border:3px solid #e0eedb57;border-radius:50%;filter:blur(5px);animation:gem-smoke 2.6s ease-out infinite}
+.gem-roll-smoke i:nth-child(2){animation-delay:.8s;left:25%}.gem-roll-smoke i:nth-child(3){animation-delay:1.7s;left:70%}
+.gem-roll-glow{position:absolute;width:260px;height:150px;border-radius:50%;background:radial-gradient(ellipse,#fcb75b27,transparent 71%);filter:blur(12px)}
+.gem-reveal-word{position:relative;width:100%;font:900 clamp(26px,5vw,62px)/1.05 'Trebuchet MS',sans-serif;letter-spacing:-1px;color:#f9e4a7;min-height:120px}
+.gem-reveal-word>span{position:absolute;left:0;right:0;top:0;display:block;text-align:center}
+.gem-reveal-outline{color:transparent;-webkit-text-stroke:1px #ecdba54a}
+.gem-reveal-fill{clip-path:inset(0 100% 0 0);animation:gem-type-reveal 4.1s linear forwards;text-shadow:0 0 28px #f0c37066}
+.gem-reveal-word b{font-size:1.23em;color:inherit}
+.gem-burning-caption{font-size:13px;letter-spacing:1.2px;color:#dce4c8c0}
+
+.gem-celebration{min-height:90svh;display:flex;align-items:center;justify-content:center;text-align:center;padding-top:28px;padding-bottom:42px}
+.gem-celebration-inner{max-width:720px;position:relative;z-index:3;display:flex;align-items:center;flex-direction:column;gap:18px;animation:gem-appear .85s ease-out both}
+.gem-celebration-flower{font-size:57px;color:#e7cc7b;text-shadow:0 0 44px #f0dfab8e;animation:gem-spin 22s linear infinite}
+.gem-celebration h1{font:400 clamp(66px,8.3vw,118px)/.96 Georgia,serif;letter-spacing:-3.7px;text-shadow:0 8px 40px #091d16a8}
+.gem-celebration h1 em{color:#d0df98}
+.gem-celebration-inner>p:not(.gem-from-brother){max-width:500px;font-size:clamp(15px,1.5vw,18px);line-height:1.65;color:#f7efdbc9}
+.gem-rider-art{width:min(460px,94vw);height:clamp(150px,26vw,275px);position:relative;display:flex;justify-content:center;align-items:center;margin:-2px 0 6px}
+.gem-rider-art::before{content:"";position:absolute;left:13%;right:13%;bottom:8%;height:22px;background:#061a1269;border-radius:50%;filter:blur(13px)}
+.gem-rider-art img{max-width:100%;max-height:100%;object-fit:contain;position:relative;filter:drop-shadow(0 12px 16px #061a1670)}
+.gem-from-brother{font-size:13px;letter-spacing:.3px;color:#dbe9c9b5}
+.gem-button{border:0;background:#f5eac9;color:#20422e;display:flex;align-items:center;justify-content:center;gap:22px;font-size:14px;font-weight:850;min-height:56px;padding:16px 27px;border-radius:8px;box-shadow:0 12px 36px #091b1673}
+.gem-button:hover{background:#fff5d9}
+.gem-confetti{pointer-events:none;position:fixed;inset:0;z-index:2;overflow:hidden}
+.gem-confetti-piece{position:absolute;top:-12%;width:10px;height:19px;border-radius:3px;opacity:0;animation:gem-confetti-fall linear both}
+.gem-confetti-glyph{width:27px;height:27px;font-size:23px}
+
+.gem-letter-section{position:relative;z-index:3;padding:58px 20px 92px;min-height:70svh;background:linear-gradient(180deg,rgba(7,25,19,.15),rgba(6,20,16,.6));border-top:1px solid #f5ebc026}
+.gem-letter-wrap{max-width:680px;margin:0 auto;text-align:center}
+.gem-letter-wrap h2{margin-top:16px;font:400 clamp(42px,6.5vw,73px)/1.06 Georgia,serif;letter-spacing:-2px}
+.gem-letter-wrap h2 em{color:#cedd9d}
+.gem-letter-subtitle{margin-top:19px!important;color:#f8f1d0b8;font-size:14px;line-height:1.6}
+.gem-envelope{position:relative;display:block;width:min(420px,86vw);height:250px;margin:55px auto 22px;border:0;background:none;color:#2c4d37;filter:drop-shadow(0 21px 15px #061b166e);transition:transform .25s}
+.gem-envelope:hover{transform:translateY(-7px) rotate(-1deg)}
+.gem-envelope-back{position:absolute;inset:0 0 36px;background:#e9d7aa;border:2px solid #f6e5bf;border-radius:7px}
+.gem-envelope-back::before{content:"";position:absolute;inset:0;background:linear-gradient(145deg,transparent 50%,#d6bf8b 50%);clip-path:polygon(0 0,50% 65%,100% 0,100% 100%,0 100%)}
+.gem-envelope-note{position:absolute;z-index:2;left:15%;right:15%;top:88px;font:700 17px/1.4 Georgia,serif;letter-spacing:1px;color:#2b523d}
+.gem-envelope-note small{font:700 9px/2 sans-serif;letter-spacing:2.2px}
+.gem-envelope-flap{position:absolute;z-index:3;top:0;left:0;right:0;height:135px;background:#e6d2a3;clip-path:polygon(0 0,100% 0,50% 87%);border-radius:7px}
+.gem-envelope-seal{position:absolute;z-index:4;left:calc(50% - 21px);top:97px;border:3px solid #e5c28f;background:#2e613f;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;color:#f1e5b2;font-size:25px;box-shadow:0 5px 8px #6f65344d}
+.gem-envelope-hint{position:absolute;bottom:0;left:0;right:0;font-size:11px;font-weight:800;letter-spacing:1.5px;color:#f5e7b0}
+.gem-letter-paper{margin:48px auto 20px;max-width:590px;text-align:left;background:var(--gem-paper);color:#2c4c39;padding:clamp(28px,6vw,54px);border-radius:5px;box-shadow:0 35px 80px #061d169c;transform:rotate(-.6deg);animation:gem-appear .6s ease-out both;position:relative;line-height:1.75}
+.gem-letter-paper::after{content:'✳';position:absolute;bottom:27px;right:34px;color:#b8c18d;font-size:29px}
+.gem-letter-paper-top{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid #cdd1ba;padding-bottom:15px;margin-bottom:35px;font-size:10px;letter-spacing:1.3px;font-weight:800}
+.gem-letter-text{font:17px/1.9 Georgia,serif;white-space:pre-line;overflow-wrap:anywhere}
+.gem-letter-text p+p{margin-top:19px}
+.gem-letter-placeholder{color:#7a8573;font-style:italic}
+.gem-letter-sign{text-align:right;margin-top:30px!important;font:italic 22px Georgia,serif}
+.gem-letter-sign span{color:#698a6d}
+.gem-letter-actions{margin:35px auto 0;display:flex;justify-content:center;gap:12px;flex-wrap:wrap}
+.gem-letter-actions button{background:transparent;border:1px solid #dce8c259;border-radius:999px;color:#f5f0d9;font-size:12px;padding:12px 17px}
+.gem-letter-actions button:hover{background:#f0e9ce1d}
+.gem-easter-egg{font-size:13px;color:#efe1ab;margin-top:18px!important;line-height:1.6}
+.gem-footer{position:relative;z-index:4;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:24px max(22px,calc((100vw - 1100px)/2));border-top:1px solid #e5e5ba31;font-size:9px;color:#e2e5b799;letter-spacing:1.6px}
+
+@keyframes gem-flame-flicker{from{transform:scaleX(.8) rotate(-5deg)}to{transform:scaleX(1.12) rotate(6deg)}}
+@keyframes gem-spark-pop{from{opacity:1;transform:translate(0,0) scale(1)}to{opacity:0;transform:translate(var(--sx),var(--sy)) scale(.15)}}
+@keyframes gem-burn-across{0%{width:0;opacity:.1}100%{width:100%;opacity:1}}
+@keyframes gem-ember-move{from{right:0;opacity:1}to{right:80%;opacity:0}}
+@keyframes gem-smoke{0%{transform:translateY(20px) scale(.25);opacity:0}30%{opacity:.6}100%{transform:translate(-15px,-95px) scale(1.7);opacity:0}}
+@keyframes gem-type-reveal{to{clip-path:inset(0 0 0 0)}}
+@keyframes gem-appear{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+@keyframes gem-spin{to{transform:rotate(360deg)}}
+@keyframes gem-confetti-fall{0%{transform:translate3d(0,0,0) rotate(0);opacity:0}10%{opacity:1}90%{opacity:1}100%{transform:translate3d(var(--gem-drift),120vh,0) rotate(var(--gem-rotation));opacity:0}}
+
+@media(max-width:800px){
+  .gem-header{padding:20px 22px}
+  .gem-intro{grid-template-columns:1fr;gap:26px;text-align:center;padding-top:24px;padding-bottom:75px}
+  .gem-intro-copy{margin:auto}
+  .gem-intro-copy h1{font-size:clamp(49px,11vw,78px);margin:15px 0 17px}
+  .gem-intro-copy .gem-lead{margin:auto;max-width:430px}
+  .gem-lighting-area{min-height:390px;max-width:440px}
+  .gem-bottom-note{bottom:20px}
+  .gem-burn-screen{min-height:calc(100svh - 106px)}
+}
+@media(max-width:500px){
+  .gem-header{padding:16px 16px}
+  .gem-back{padding:9px 10px;font-size:20px;line-height:1}
+  .gem-back span{display:none}
+  .gem-brand{font-size:10px;letter-spacing:1.5px}
+  .gem-made-by{font-size:9px;max-width:88px;white-space:normal;text-align:right}
+  .gem-intro{gap:25px;padding:24px 17px 65px}
+  .gem-intro-copy h1{font-size:clamp(45px,11.4vw,58px);letter-spacing:-2.2px}
+  .gem-lead{font-size:14px;line-height:1.65}
+  .gem-overline{font-size:9px;letter-spacing:1.4px}
+  .gem-lighting-area{min-height:370px;padding:12px;border-radius:27px}
+  .gem-lighting-area::after{border-radius:22px}
+  .gem-lighting-top{left:21px;right:21px;top:20px;font-size:8px;letter-spacing:.8px}
+  .gem-lighter-button{transform:scale(.93);margin-bottom:-12px}
+  .gem-bottom-note{font-size:8px;letter-spacing:1.3px}
+  .gem-burn-screen{gap:20px;padding:24px 15px 50px}
+  .gem-burn-heading{font-size:clamp(32px,8.8vw,42px);letter-spacing:-1px}
+  .gem-reveal-word{font-size:clamp(24px,7.5vw,36px);min-height:86px}
+  .gem-celebration{padding:45px 20px 55px;min-height:calc(100svh - 88px)}
+  .gem-celebration-inner{gap:16px}
+  .gem-celebration-flower{font-size:40px}
+  .gem-celebration h1{font-size:clamp(57px,14.2vw,78px);letter-spacing:-3px}
+  .gem-celebration-inner>p:not(.gem-from-brother){font-size:14px}
+  .gem-rider-art{height:220px;margin:0}
+  .gem-from-brother{font-size:12px}
+  .gem-button{width:100%;max-width:325px;min-height:52px;padding:13px 16px;font-size:13px}
+  .gem-letter-wrap h2{font-size:clamp(39px,10vw,54px)}
+  .gem-letter-paper{padding:26px 23px}
+  .gem-letter-text{font-size:16px}
+  .gem-footer{justify-content:center;text-align:center;padding:18px 15px;font-size:8px;gap:9px}
+}
+@media(prefers-reduced-motion:reduce){
+  .gem-root *, .gem-root *::before,.gem-root *::after{animation-duration:.001ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.001ms!important}
+  .gem-reveal-fill{clip-path:inset(0 0 0 0)}
+}
+
+/* V2 do /gemeo — revelação em três queimas, rolinho na frente do texto. */
+.gem-leaves{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:1}
+.gem-leaf{position:absolute;top:-11vh;font-size:clamp(19px,3.8vw,30px);opacity:0;will-change:transform;animation:gem-leaf-fall linear infinite;filter:drop-shadow(0 3px 5px #06180b55)}
+@keyframes gem-leaf-fall{
+  0%{transform:translate3d(0,-8vh,0) rotate(0);opacity:0}
+  10%{opacity:.82} 80%{opacity:.74}
+  100%{transform:translate3d(var(--gem-drift),118vh,0) rotate(var(--gem-rotation));opacity:0}
+}
+.gem-confetti{z-index:7}
+.gem-burn-screen{min-height:calc(100svh - 105px);gap:18px;padding-top:28px;padding-bottom:76px}
+.gem-burn-heading{font:400 clamp(27px,3.7vw,46px)/1.12 Georgia,serif;letter-spacing:-1.3px}
+.gem-birthday-words{position:relative;display:flex;flex-direction:column;gap:5px;width:100%;max-width:760px;margin:6px auto 12px;padding:18px 0}
+.gem-word-line{height:clamp(74px,10vw,112px);position:relative;display:flex;align-items:center;justify-content:center;isolation:isolate}
+.gem-word-outline,.gem-word-fill{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font:900 clamp(48px,9.5vw,108px)/1 'Trebuchet MS',sans-serif;
+  letter-spacing:-2.8px;white-space:nowrap;text-align:center
+}
+.gem-word-outline{color:rgba(239,231,186,.045);-webkit-text-stroke:1px rgba(240,226,178,.22);text-shadow:none}
+.gem-word-fill{color:#f5dfa0;text-shadow:0 4px 45px rgba(250,203,111,.18);clip-path:inset(0 100% 0 0)}
+.gem-word-done .gem-word-fill{clip-path:inset(0 0 0 0)}
+.gem-word-burning .gem-word-fill{animation:gem-word-ignite 2.85s linear both}
+@keyframes gem-word-ignite{0%{clip-path:inset(0 100% 0 0)}100%{clip-path:inset(0 0 0 0)}}
+.gem-word-line.gem-word-current .gem-word-outline{-webkit-text-stroke-color:#e8d5a156}
+.gem-herbal-scene{position:absolute;z-index:5;left:4%;right:4%;top:50%;height:78px;pointer-events:none;transform:translateY(-50%)}
+.gem-herbal-body{height:29px;left:0;top:22px;position:absolute;width:100%;transform:rotate(-3deg);filter:drop-shadow(0 8px 9px #091b16b6);animation:gem-roll-disappear 2.85s linear both;overflow:visible}
+.gem-herbal-pulp{position:absolute;left:8%;right:5%;top:0;bottom:0;border-radius:3px 8px 7px 3px;
+  border:1px solid #a78b5d;background:
+  repeating-linear-gradient(108deg,transparent 0px,transparent 18px,#a8845544 20px,transparent 22px),
+  linear-gradient(180deg,#d4bf8f,#e6d5ab 45%,#ab936a);
+  box-shadow:inset 0 3px 4px #fff7de5e,inset 0 -5px 5px #8a643a38}
+.gem-herbal-fold{position:absolute;left:0;right:0;top:52%;height:1px;background:#8b704a7e}
+.gem-herbal-tip{position:absolute;right:0;top:-4px;bottom:-4px;width:10%;border-radius:45% 6px 6px 45%;background:repeating-linear-gradient(90deg,#9a6e3b,#bd9158 4px,#805632 8px);border:1px solid #98764f}
+.gem-herbal-body::before{content:"";position:absolute;z-index:2;left:0;top:2px;bottom:2px;width:12%;border-radius:9px 1px 1px 9px;
+  background:radial-gradient(circle at 40% 60%,#5b7c39 1px,transparent 3px),radial-gradient(circle at 65% 40%,#465f2d 2px,transparent 5px),repeating-linear-gradient(45deg,#526438,#34482b 4px,#7b8b48 7px)}
+.gem-herbal-ember{position:absolute;left:0;top:-4px;width:11px;height:38px;border-radius:40%;background:linear-gradient(90deg,#f9df87,#ed963e,#8d3420);
+  box-shadow:0 0 16px 8px #e884398a,0 0 35px #e39c543a;animation:gem-ember-advance 2.85s linear both;z-index:3}
+.gem-herbal-ash{position:absolute;left:0;top:-5px;width:16px;height:41px;border-radius:35%;border-left:5px dotted #989b90;background:#6e6f6266;animation:gem-ember-advance 2.85s linear both;z-index:4}
+.gem-herbal-smoke{position:absolute;left:0;top:-50px;width:100%;height:90px;z-index:6;animation:gem-smoke-track 2.85s linear both}
+.gem-herbal-smoke i{position:absolute;left:6px;bottom:20px;width:22px;height:35px;border:3px solid #ddecc76c;border-radius:50%;filter:blur(4px);animation:gem-smoke 2s ease-out infinite}
+.gem-herbal-smoke i:nth-child(2){animation-delay:.5s;left:-12px}.gem-herbal-smoke i:nth-child(3){animation-delay:1.1s;left:18px}.gem-herbal-smoke i:nth-child(4){animation-delay:1.6s;left:1px}
+@keyframes gem-roll-disappear{0%{clip-path:inset(0 0 0 0)}100%{clip-path:inset(0 0 0 100%)}}
+@keyframes gem-ember-advance{from{left:0;opacity:1}92%{opacity:1}to{left:99%;opacity:0}}
+@keyframes gem-smoke-track{from{transform:translateX(0)}to{transform:translateX(97%)}}
+.gem-next-ignition{display:flex;align-items:center;flex-direction:column;gap:3px;width:100%;animation:gem-appear .4s ease both}
+.gem-next-ignition .gem-lighter-button{min-height:215px;gap:5px;padding:0 15px 8px}
+.gem-next-ignition .gem-lighter{transform:scale(.68);transform-origin:bottom center;margin-top:-55px;margin-bottom:-6px}
+.gem-next-ignition .gem-tap-prompt{font-size:10px}
+.gem-next-ignition .gem-attempt-dots{margin:5px 0 8px}
+.gem-next-counter{font-size:9px;letter-spacing:1.7px;color:#dbe2b6a9}
+.gem-word-current{animation:gem-word-activate .4s ease-out both}
+@keyframes gem-word-activate{from{opacity:.7}to{opacity:1}}
+@media(max-width:500px){
+  .gem-burn-screen{min-height:calc(100svh - 80px);gap:12px;padding:30px 12px 45px}
+  .gem-burn-heading{font-size:clamp(30px,8.2vw,40px)}
+  .gem-birthday-words{margin:12px auto;padding:10px 0;gap:9px}
+  .gem-word-line{height:clamp(58px,18vw,78px)}
+  .gem-word-outline,.gem-word-fill{font-size:clamp(40px,11.5vw,59px);letter-spacing:-1.7px}
+  .gem-word-line:nth-child(2) .gem-word-outline,.gem-word-line:nth-child(2) .gem-word-fill{font-size:clamp(35px,10.4vw,54px)}
+  .gem-herbal-scene{left:2%;right:2%;height:67px}
+  .gem-herbal-body{height:22px}
+  .gem-herbal-ember{height:30px}.gem-herbal-ash{height:31px}
+  .gem-next-ignition .gem-lighter-button{min-height:190px}
+  .gem-next-ignition .gem-lighter{transform:scale(.58);margin-top:-70px;margin-bottom:-10px}
+  .gem-leaf{font-size:20px}
+}
+@media(prefers-reduced-motion:reduce){
+  .gem-word-burning .gem-word-fill{animation:none;clip-path:inset(0)}
+  .gem-herbal-body,.gem-herbal-ember,.gem-herbal-ash,.gem-herbal-smoke{animation:none}
+  .gem-leaf{animation:none;opacity:0}
+}
