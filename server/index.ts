@@ -5,7 +5,7 @@ import staticFiles from '@fastify/static';
 import mariadb from 'mariadb';
 import { Client } from 'minio';
 import sharp from 'sharp';
-import { randomUUID, timingSafeEqual } from 'node:crypto';
+import { randomUUID, timingSafeEqual, createHash } from 'node:crypto';
 import { resolve } from 'node:path';
 
 const env = process.env;
@@ -33,10 +33,10 @@ const EMOJIS = ['❤️', '😍', '😂', '🥹', '👽', '🔥'] as const;
 type Kind = 'foto' | 'video' | 'texto';
 type MomentRow = {
   id: string; autor: string; legenda: string; objeto: string | null;
-  tipo: Kind; mime: string | null; tamanho: number | null; criado_em: Date;
+  tipo: Kind; mime: string | null; tamanho: number | null; criado_em: Date; ordem: number; secao: string;
 };
 
-await app.register(multipart, { limits: { fileSize: MAX_VIDEO, files: 1, fields: 6, parts: 7, fieldSize: 10000 } });
+await app.register(multipart, { limits: { fileSize: MAX_VIDEO, files: 1, fields: 7, parts: 8, fieldSize: 10000 } });
 await app.register(rateLimit, { global: false });
 app.setErrorHandler((error, _req, reply) => {
   app.log.error(error);
@@ -64,6 +64,24 @@ const columns = new Set((existing as { COLUMN_NAME: string; IS_NULLABLE: string;
 if (!columns.has('tipo')) await pool.query("ALTER TABLE momentos ADD COLUMN tipo ENUM('foto','video','texto') NOT NULL DEFAULT 'foto'");
 if (!columns.has('mime')) await pool.query('ALTER TABLE momentos ADD COLUMN mime VARCHAR(100) NULL');
 if (!columns.has('tamanho')) await pool.query('ALTER TABLE momentos ADD COLUMN tamanho BIGINT NULL');
+// Ordem manual e migração aditiva. Na primeira execução preserva a sequência anterior.
+if (!columns.has('ordem')) await pool.query('ALTER TABLE momentos ADD COLUMN ordem BIGINT NULL');
+// Seções por endereço: publicações antigas pertencem ao mural principal (secao='').
+if (!columns.has('secao')) await pool.query("ALTER TABLE momentos ADD COLUMN secao VARCHAR(120) NOT NULL DEFAULT ''");
+const sectionIndex = await pool.query(`SELECT COUNT(*) AS total FROM information_schema.STATISTICS
+  WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'momentos' AND INDEX_NAME = 'idx_momentos_secao_ordem'`);
+if (Number(sectionIndex[0].total) === 0) {
+  await pool.query('CREATE INDEX idx_momentos_secao_ordem ON momentos (secao, ordem, id)');
+}
+const pendingOrder = await pool.query('SELECT id FROM momentos WHERE ordem IS NULL ORDER BY criado_em DESC, id DESC') as { id: string }[];
+if (pendingOrder.length) {
+  const lastOrder = await pool.query('SELECT COALESCE(MAX(ordem), 0) AS ultima FROM momentos');
+  const startingOrder = Number(lastOrder[0].ultima);
+  for (let i = 0; i < pendingOrder.length; i++) {
+    await pool.query('UPDATE momentos SET ordem = ? WHERE id = ? AND ordem IS NULL', [startingOrder + i + 1, pendingOrder[i].id]);
+  }
+}
+
 // A coluna da versão anterior não aceitava NULL; textos não têm objeto no storage.
 const objectColumn = (existing as { COLUMN_NAME: string; IS_NULLABLE: string; CHARACTER_MAXIMUM_LENGTH: number | null }[]).find(x => x.COLUMN_NAME === 'objeto');
 if (objectColumn && (objectColumn.IS_NULLABLE === 'NO' || (objectColumn.CHARACTER_MAXIMUM_LENGTH || 0) < 255)) {
@@ -81,6 +99,17 @@ if (!await store.bucketExists(bucket)) await store.makeBucket(bucket);
 
 function httpError(message: string, statusCode = 400) {
   return Object.assign(new Error(message), { statusCode });
+}
+// O nome faz parte da URL e identifica um mural sem autenticação.
+// Caminhos como "gemeo", "familia" e "amigos/2026" são aceitos.
+function normalizeSection(value: unknown): string {
+  if (value === undefined || value === null || value === '') return '';
+  if (typeof value !== 'string') throw httpError('Seção inválida.');
+  const secao = value.trim().toLowerCase();
+  if (secao.length > 120 || !/^[a-z0-9_-]+(?:\/[a-z0-9_-]+)*$/.test(secao)) {
+    throw httpError('Seção inválida. Use letras, números, hífen, underline ou barras.');
+  }
+  return secao;
 }
 function validId(value: string) {
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value))
@@ -115,6 +144,7 @@ function publicMoment(row: MomentRow, reactions: Record<string, number> = {}) {
     url: row.tipo === 'texto' ? null : '/api/midia/' + row.id,
     reacoes: reactions,
     criadoEm: row.criado_em instanceof Date ? row.criado_em.toISOString() : row.criado_em,
+    secao: row.secao || '',
   };
 }
 
@@ -123,38 +153,40 @@ app.get('/api/health', async () => {
   return { ok: await store.bucketExists(bucket) };
 });
 
+// O cursor utiliza a posição salva, evitando voltar à ordem cronológica após a organização.
 app.get('/api/momentos', async req => {
-  const { cursor, tipo } = req.query as { cursor?: string; tipo?: string };
+  const { cursor, tipo, secao: rawSection } = req.query as { cursor?: string; tipo?: string; secao?: string };
+  const secao = normalizeSection(rawSection);
   if (tipo && !['foto', 'video', 'texto'].includes(tipo)) throw httpError('Filtro inválido.');
-  let date: Date | undefined, id: string | undefined;
+  let posicao: number | undefined;
+  let id: string | undefined;
   if (cursor) {
     try {
-      const decoded = Buffer.from(cursor, 'base64url').toString();
-      const pieces = decoded.split('|');
-      if (pieces.length !== 2 || !pieces[0] || !pieces[1]) throw Error();
-      date = new Date(pieces[0]); id = pieces[1];
-      if (Number.isNaN(date.getTime())) throw Error();
+      const parts = Buffer.from(cursor, 'base64url').toString('utf8').split('|');
+      if (parts.length !== 3 || parts[0] !== 'v2') throw Error();
+      posicao = Number(parts[1]); id = parts[2];
+      if (!Number.isSafeInteger(posicao)) throw Error();
       validId(id);
-    } catch { throw httpError('Cursor inválido.'); }
+    } catch { throw httpError('Cursor inválido. Atualize a página.'); }
   }
-  const clauses: string[] = [];
-  const args: unknown[] = [];
+  const clauses: string[] = ['secao = ?'];
+  const args: unknown[] = [secao];
   if (tipo) { clauses.push('tipo = ?'); args.push(tipo); }
-  if (date && id) {
-    clauses.push('(criado_em < ? OR (criado_em = ? AND id < ?))');
-    args.push(date, date, id);
+  if (posicao !== undefined && id) {
+    clauses.push('(ordem > ? OR (ordem = ? AND id < ?))');
+    args.push(posicao, posicao, id);
   }
   const where = clauses.length ? ' WHERE ' + clauses.join(' AND ') : '';
-  const rows = await pool.query(`SELECT * FROM momentos${where} ORDER BY criado_em DESC,id DESC LIMIT 21`, args) as MomentRow[];
+  const rows = await pool.query(`SELECT * FROM momentos${where} ORDER BY ordem ASC, id DESC LIMIT 21`, args) as MomentRow[];
   const items = rows.slice(0, 20);
   const reactionMap = await reactionsFor(items.map(x => x.id));
-  const count = await pool.query('SELECT COUNT(*) AS total FROM momentos');
+  const count = await pool.query('SELECT COUNT(*) AS total FROM momentos WHERE secao = ?', [secao]);
   const last = items.at(-1);
   return {
     items: items.map(row => publicMoment(row, reactionMap[row.id])),
     total: Number(count[0].total),
     next: rows.length > 20 && last
-      ? Buffer.from(new Date(last.criado_em).toISOString() + '|' + last.id).toString('base64url')
+      ? Buffer.from(`v2|${last.ordem}|${last.id}`).toString('base64url')
       : null,
   };
 });
@@ -191,7 +223,7 @@ app.get('/api/fotos/:id', async (req, reply) => {
 });
 
 app.post('/api/momentos', { config: { rateLimit: { max: 8, timeWindow: '1 minute' } } }, async (req, reply) => {
-  let autor = '', legenda = '', tipo: Kind | '' = '', buffer: Buffer | undefined;
+  let autor = '', legenda = '', tipo: Kind | '' = '', secao = '', buffer: Buffer | undefined;
   let mimeType = '';
   for await (const part of req.parts()) {
     if (part.type === 'file') {
@@ -201,6 +233,7 @@ app.post('/api/momentos', { config: { rateLimit: { max: 8, timeWindow: '1 minute
     } else if (part.fieldname === 'autor') autor = String(part.value).trim();
     else if (part.fieldname === 'legenda') legenda = String(part.value).trim();
     else if (part.fieldname === 'tipo') tipo = String(part.value) as Kind;
+    else if (part.fieldname === 'secao') secao = normalizeSection(part.value);
   }
   if (!tipo) tipo = buffer ? (mimeType.startsWith('video/') ? 'video' : 'foto') : 'texto';
   if (!['foto', 'video', 'texto'].includes(tipo)) throw httpError('Tipo de publicação inválido.');
@@ -231,16 +264,20 @@ app.post('/api/momentos', { config: { rateLimit: { max: 8, timeWindow: '1 minute
   if (fileData && objectName && savedMime) {
     await store.putObject(bucket, objectName, fileData, fileData.length, { 'Content-Type': savedMime });
   }
+  let primeiraPosicao = 0;
   try {
-    await pool.query('INSERT INTO momentos (id,autor,legenda,objeto,tipo,mime,tamanho) VALUES (?,?,?,?,?,?,?)',
-      [id, autor, legenda, objectName, tipo, savedMime, fileData?.length || null]);
+    // Novas lembranças entram no início do mural, inclusive após uma ordenação manual.
+    const minRows = await pool.query('SELECT MIN(ordem) AS primeiro FROM momentos WHERE secao = ?', [secao]);
+    primeiraPosicao = minRows[0].primeiro === null ? 0 : Number(minRows[0].primeiro) - 1;
+    await pool.query('INSERT INTO momentos (id,autor,legenda,objeto,tipo,mime,tamanho,ordem,secao) VALUES (?,?,?,?,?,?,?,?,?)',
+      [id, autor, legenda, objectName, tipo, savedMime, fileData?.length || null, primeiraPosicao, secao]);
   } catch (error) {
     if (objectName) await store.removeObject(bucket, objectName).catch(() => {});
     throw error;
   }
   return reply.code(201).send(publicMoment({
     id, autor, legenda, objeto: objectName, tipo, mime: savedMime,
-    tamanho: fileData?.length || null, criado_em: new Date(),
+    tamanho: fileData?.length || null, criado_em: new Date(), ordem: primeiraPosicao, secao,
   }));
 });
 
@@ -260,6 +297,50 @@ app.post('/api/momentos/:id/reacoes', {
 });
 
 app.get('/api/admin/session', { preHandler: checkAdmin }, async () => ({ ok: true }));
+// Edição de sequência protegida pelo mesmo token do administrador.
+function orderVersion(ids: string[]): string {
+  return createHash('sha256').update(ids.join('\n')).digest('hex');
+}
+
+app.get('/api/admin/ordem', { preHandler: checkAdmin }, async req => {
+  const secao = normalizeSection((req.query as { secao?: string }).secao);
+  const rows = await pool.query('SELECT * FROM momentos WHERE secao = ? ORDER BY ordem ASC, id DESC', [secao]) as MomentRow[];
+  if (rows.length > 2000) throw httpError('Há muitas publicações para organizar de uma vez.', 413);
+  return { items: rows.map(row => publicMoment(row)), version: orderVersion(rows.map(row => row.id)) };
+});
+
+app.put('/api/admin/ordem', {
+  preHandler: checkAdmin,
+  config: { rateLimit: { max: 15, timeWindow: '1 minute' } },
+}, async req => {
+  const { ids, version, secao: rawSection } = (req.body || {}) as { ids?: unknown; version?: unknown; secao?: unknown };
+  const secao = normalizeSection(rawSection);
+  if (!Array.isArray(ids) || ids.length > 2000 || !ids.every(id => typeof id === 'string') ||
+      typeof version !== 'string' || !/^[0-9a-f]{64}$/.test(version)) {
+    throw httpError('Lista de organização inválida.');
+  }
+  for (const id of ids) validId(id);
+  if (new Set(ids).size !== ids.length) throw httpError('Há publicações duplicadas na organização.');
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    const rows = await conn.query('SELECT id FROM momentos WHERE secao = ? ORDER BY ordem ASC, id DESC FOR UPDATE', [secao]) as { id: string }[];
+    if (rows.length !== ids.length || orderVersion(rows.map(row => row.id)) !== version ||
+        ids.some(id => !rows.some(row => row.id === id))) {
+      throw httpError('O mural mudou enquanto você organizava. Recarregue a lista para evitar perder alterações.', 409);
+    }
+    for (let i = 0; i < ids.length; i++) {
+      await conn.query('UPDATE momentos SET ordem = ? WHERE id = ? AND secao = ?', [i + 1, ids[i], secao]);
+    }
+    await conn.commit();
+    return { ok: true, version: orderVersion(ids) };
+  } catch (error) {
+    await conn.rollback();
+    throw error;
+  } finally { conn.release(); }
+});
+
+
 app.delete('/api/admin/momentos/:id/reacoes', { preHandler: checkAdmin }, async req => {
   const { id } = req.params as { id: string };
   validId(id);

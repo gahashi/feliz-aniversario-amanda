@@ -16,6 +16,7 @@ type Moment = {
   url: string | null;
   reacoes: Record<string, number>;
   criadoEm: string;
+  secao?: string;
 };
 type Page = { items: Moment[]; total: number; next: string | null };
 const EMOJIS = ['❤️', '😍', '😂', '🥹', '👽', '🔥'];
@@ -45,15 +46,6 @@ function hashId(id: string) {
   for (let i = 0; i < id.length; i++) h = Math.imul(h ^ id.charCodeAt(i), 16777619);
   return h >>> 0;
 }
-// Os bilhetes entram em posições variadas do álbum, sem alterar a ordem salva no banco.
-function scatterMessages(items: Moment[]): Moment[] {
-  const result = items.filter(m => m.tipo !== 'texto');
-  for (const note of items.filter(m => m.tipo === 'texto')) {
-    result.splice(hashId(note.id) % (result.length + 1), 0, note);
-  }
-  return result;
-}
-
 function Reactions({ moment, onReact, disabled = false }: {
   moment: Moment; onReact: (id: string, emoji: string) => void; disabled?: boolean;
 }) {
@@ -126,7 +118,7 @@ function Modal({ children, onClose, locked = false }: {
     {children}
   </dialog>;
 }
-function Composer({ onClose, onCreated }: { onClose: () => void; onCreated: (moment: Moment) => void }) {
+function Composer({ onClose, onCreated, secao = '' }: { onClose: () => void; onCreated: (moment: Moment) => void; secao?: string }) {
   const [kind, setKind] = useState<Kind>('foto');
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState('');
@@ -160,6 +152,7 @@ function Composer({ onClose, onCreated }: { onClose: () => void; onCreated: (mom
     setBusy(true); setError('');
     const data = new FormData();
     data.set('tipo', kind); data.set('autor', author.trim()); data.set('legenda', caption.trim());
+    data.set('secao', secao);
     if (file) data.set('arquivo', file);
     try {
       const created = await responseJson<Moment>(await fetch('/api/momentos', { method: 'POST', body: data }));
@@ -227,7 +220,9 @@ function Detail({ moment, onClose, onReact }: {
     <Reactions moment={moment} onReact={onReact} />
   </div></Modal>;
 }
-function Wall() {
+function Wall({ secao = '' }: { secao?: string }) {
+  const secret = Boolean(secao);
+  const sectionLabel = secao.replaceAll('/', ' / ');
   const [items, setItems] = useState<Moment[]>([]);
   const [total, setTotal] = useState(0);
   const [next, setNext] = useState<string | null>(null);
@@ -249,6 +244,7 @@ function Wall() {
     try {
       const params = new URLSearchParams();
       if (cursor) params.set('cursor', cursor);
+      if (secao) params.set('secao', secao);
       const result = await responseJson<Page>(await fetch('/api/momentos?' + params.toString(), { signal: controller.signal }));
       if (currentGeneration !== generation.current) return;
       setItems(old => replace ? result.items : [...old, ...result.items.filter(x => !old.some(y => x.id === y.id))]);
@@ -258,7 +254,7 @@ function Wall() {
     } finally {
       if (currentGeneration === generation.current) { setLoading(false); loadingRef.current = false; }
     }
-  }, []);
+  }, [secao]);
   useEffect(() => {
     setItems([]); setNext(null);
     void fetchPage(null, true);
@@ -304,12 +300,13 @@ function Wall() {
     } catch (err) { setItems(prev => prev.map(m => increase(m, -1))); setError(readableError(err)); }
   }
   const selected = selectedId ? items.find(m => m.id === selectedId) || null : null;
-  const visible = scatterMessages(items);
+  // Respeita exatamente a ordem definida no painel administrativo.
+  const visible = items;
   return <div className="site-shell">
     <div className="reading-progress" aria-hidden="true" />
     <header className="topbar">
       <a href="/" className="brand" aria-label="Amanda Party, início">amanda<span className="brand-star">✳</span><small>party</small></a>
-      <a href="#mural" className="header-wall">o mural ↓</a>
+      <a href="#mural" className="header-wall">{secret ? `mural: ${sectionLabel} ↓` : 'o mural ↓'}</a>
       <button className="btn btn-top" onClick={() => setComposer(true)}>+ escrever</button>
     </header>
     <main>
@@ -318,15 +315,15 @@ function Wall() {
           <div className="hero-scene" aria-hidden="true" style={{ backgroundImage: `url(${coastalScene})` }} />
           <div className="hero-shade" aria-hidden="true" />
           <div className="hero-copy">
-            <p className="hero-kicker"><span className="kicker-dot"/> PRAIA, BRISA E UM DIA TODO SEU</p>
-            <h1 id="hero-title">Feliz<br/>aniversário,<br/><em>Amanda.</em></h1>
+            <p className="hero-kicker"><span className="kicker-dot"/> {secret ? 'UM MURAL SÓ DESTE LINK' : 'PRAIA, BRISA E UM DIA TODO SEU'}</p>
+            {secret ? <h1 id="hero-title" className="secret-hero-title">Um mural<br/>só para<br/><em>{sectionLabel}.</em></h1> : <h1 id="hero-title">Feliz<br/>aniversário,<br/><em>Amanda.</em></h1>}
           </div>
           <div className="hero-tail">
-            <p className="hero-description">Entre o mar e a estrada, fizemos esse cantinho para guardar carinho, memórias e recados. <strong>As lembranças estão logo abaixo.</strong></p>
+            <p className="hero-description">{secret ? <>Essa página guarda apenas as publicações enviadas para <strong>/secreto/{secao}</strong>. O mural principal e os demais links continuam separados.</> : <>Entre o mar e a estrada, fizemos esse cantinho para guardar carinho, memórias e recados. <strong>As lembranças estão logo abaixo.</strong></>}</p>
             <div className="hero-actions"><button className="btn btn-primary" onClick={() => setComposer(true)}>Deixar uma lembrança <span aria-hidden="true">↗</span></button><a href="#mural" className="see-memories">Explorar o mural <span aria-hidden="true">↓</span></a></div>
           </div>
           <div className="rider-path" aria-hidden="true"><div className="rider-float"><img src={amandaOnBiz} alt="" className="hero-biz" /></div></div>
-          <div className="hero-bottom"><span>01 / UM DIA ESPECIAL</span><div className="scroll-cue"><span>DESLIZE PARA VER AS LEMBRANÇAS</span><span className="scroll-arrow">↓</span></div><span className="hero-memories">{total} lembrança{total === 1 ? '' : 's'} no mural</span></div>
+          <div className="hero-bottom"><span>{secret ? `01 / MURAL ${sectionLabel.toUpperCase()}` : '01 / UM DIA ESPECIAL'}</span><div className="scroll-cue"><span>DESLIZE PARA VER AS LEMBRANÇAS</span><span className="scroll-arrow">↓</span></div><span className="hero-memories">{total} lembrança{total === 1 ? '' : 's'} no mural</span></div>
         </div>
       </section>
       <div className="coast-transition" aria-hidden="true"><span>PEQUENAS HISTÓRIAS, GRANDES LEMBRANÇAS</span></div>
@@ -336,8 +333,8 @@ function Wall() {
           <div className="mural-background-wash" />
         </div>
         <div className="mural-content">
-        <div className="mural-heading"><span className="section-overline">PARADA 01 · MEMÓRIAS</span><h2>Um mar de<br/><em>gente querida.</em></h2><p>Aqui cabe tudo: foto bonita, vídeo engraçado ou uma mensagem do coração.</p></div>        <div className="mural-meta"><span className="mural-count">{total} lembrança{total === 1 ? '' : 's'} no mural</span></div>
-        {!loading && !items.length && !error && <div className="empty-state"><span>♡</span><h3>A primeira lembrança pode ser sua.</h3><p>Deixa uma foto, vídeo ou recadinho pra Amanda!</p><button className="btn btn-primary" onClick={() => setComposer(true)}>Publicar uma lembrança ↗</button></div>}
+        <div className="mural-heading"><span className="section-overline">{secret ? `MURAL / ${sectionLabel.toUpperCase()}` : 'PARADA 01 · MEMÓRIAS'}</span><h2>{secret ? <>As lembranças<br/><em>desse cantinho.</em></> : <>Um mar de<br/><em>gente querida.</em></>}</h2><p>{secret ? 'Só aparecem aqui as fotos, vídeos e recados publicados neste endereço.' : 'Aqui cabe tudo: foto bonita, vídeo engraçado ou uma mensagem do coração.'}</p></div>        <div className="mural-meta"><span className="mural-count">{total} lembrança{total === 1 ? '' : 's'} no mural</span></div>
+        {!loading && !items.length && !error && <div className="empty-state"><span>♡</span><h3>A primeira lembrança pode ser sua.</h3><p>{secret ? 'Compartilhe uma foto, vídeo ou recado neste mural.' : 'Deixa uma foto, vídeo ou recadinho pra Amanda!'}</p><button className="btn btn-primary" onClick={() => setComposer(true)}>Publicar uma lembrança ↗</button></div>}
         <div className="masonry-grid">
           {visible.map((moment, i) => <MomentCard key={moment.id} moment={moment} index={i} onOpen={m => setSelectedId(m.id)} onReact={reactTo} />)}
         </div>
@@ -352,11 +349,23 @@ function Wall() {
     </main>
     <footer className="site-footer"><div><a href="/" className="footer-logo">amanda ✳</a><span>feito com amor, brisa do mar e algumas risadas.</span></div><a href="/admin" className="admin-access">admin</a></footer>
     <button className="floating-create" onClick={() => setComposer(true)} aria-label="Adicionar lembrança">+ <span>Deixar recado</span></button>
-    {composer && <Composer onClose={() => setComposer(false)} onCreated={created => { setTotal(n => n + 1); setItems(old => [created, ...old]); }} />}
+    {composer && <Composer secao={secao} onClose={() => setComposer(false)} onCreated={created => { setTotal(n => n + 1); setItems(old => [created, ...old]); }} />}
     {selected && <Detail moment={selected} onClose={() => setSelectedId(null)} onReact={reactTo} />}
   </div>;
 }
+function movePublication(list: Moment[], sourceId: string, targetId: string): Moment[] {
+  const from = list.findIndex(moment => moment.id === sourceId);
+  const to = list.findIndex(moment => moment.id === targetId);
+  if (from < 0 || to < 0 || from === to) return list;
+  const result = [...list];
+  const [selected] = result.splice(from, 1);
+  result.splice(to, 0, selected);
+  return result;
+}
+
 function Admin() {
+  const [adminSection, setAdminSection] = useState(() => new URLSearchParams(window.location.search).get('secao') || '');
+  const [sectionInput, setSectionInput] = useState(() => new URLSearchParams(window.location.search).get('secao') || '');
   const [token, setToken] = useState(() => sessionStorage.getItem('amanda-admin-token') || '');
   const [input, setInput] = useState('');
   const [authorized, setAuthorized] = useState(false);
@@ -366,37 +375,74 @@ function Admin() {
   const [next, setNext] = useState<string | null>(null);
   const [total, setTotal] = useState(0);
   const [workingId, setWorkingId] = useState('');
+
+  const [organizing, setOrganizing] = useState(false);
+  const [orderLoading, setOrderLoading] = useState(false);
+  const [orderSaving, setOrderSaving] = useState(false);
+  const [orderDraft, setOrderDraft] = useState<Moment[]>([]);
+  const [orderOriginal, setOrderOriginal] = useState<Moment[]>([]);
+  const [orderVersion, setOrderVersion] = useState('');
+  const [orderNotice, setOrderNotice] = useState('');
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const draggedRef = useRef<string | null>(null);
+  const pointerDragRef = useRef<{ id: string; pointer: number } | null>(null);
+  const dirty = orderDraft.length === orderOriginal.length && orderDraft.some((m, i) => m.id !== orderOriginal[i].id);
+
   const loadItems = useCallback(async (cursor?: string) => {
     try {
-      const page = await responseJson<Page>(await fetch('/api/momentos' + (cursor ? '?cursor=' + encodeURIComponent(cursor) : ''), { cache: 'no-store' }));
+      const params = new URLSearchParams();
+      if (cursor) params.set('cursor', cursor);
+      if (adminSection) params.set('secao', adminSection);
+      const page = await responseJson<Page>(await fetch('/api/momentos?' + params.toString(), { cache: 'no-store' }));
       setItems(old => cursor ? [...old, ...page.items.filter(m => !old.some(x => x.id === m.id))] : page.items);
       setNext(page.next); setTotal(page.total);
-    } catch (err) { setError(readableError(err, 'Não foi possível publicar agora. Se continuar, verifique os logs do servidor web.')); }
-  }, []);
+    } catch (err) { setError(readableError(err)); }
+  }, [adminSection]);
   useEffect(() => {
     if (!token) return;
     let ignore = false;
     setChecking(true);
     fetch('/api/admin/session', { headers: { Authorization: `Bearer ${token}` } })
       .then(r => responseJson<{ ok: boolean }>(r))
-      .then(() => { if (!ignore) { setAuthorized(true); setError(''); void loadItems(); } })
+      .then(() => { if (!ignore) { setAuthorized(true); setError(''); } })
       .catch(() => { if (!ignore) { setAuthorized(false); setToken(''); setError('Token inválido.'); sessionStorage.removeItem('amanda-admin-token'); } })
       .finally(() => { if (!ignore) setChecking(false); });
     return () => { ignore = true; };
-  }, [token, loadItems]);
+  }, [token]);
+  useEffect(() => {
+    if (authorized) void loadItems();
+  }, [authorized, loadItems]);
   async function login(event: React.FormEvent) {
     event.preventDefault();
     if (!input.trim()) return;
     setError(''); sessionStorage.setItem('amanda-admin-token', input.trim()); setToken(input.trim()); setInput('');
   }
-  function logout() { sessionStorage.removeItem('amanda-admin-token'); setToken(''); setAuthorized(false); setItems([]); setError(''); }
+  function logout() {
+    sessionStorage.removeItem('amanda-admin-token');
+    setToken(''); setAuthorized(false); setItems([]); setError(''); setOrganizing(false); setOrderDraft([]);
+  }
+  function switchSection(event: React.FormEvent) {
+    event.preventDefault();
+    const raw = sectionInput.trim().toLowerCase().replace(/^\/+|\/+$/g, '');
+    const value = raw.startsWith('secreto/') ? raw.slice('secreto/'.length) : raw;
+    if (value.length > 120 || (value && !/^[a-z0-9_-]+(?:\/[a-z0-9_-]+)*$/.test(value))) {
+      setError('Nome de seção inválido. Use letras, números, hífen, underline ou barras.'); return;
+    }
+    if (value === adminSection) return;
+    if (dirty && !window.confirm('Descartar a ordem ainda não salva antes de trocar de mural?')) return;
+    setError(''); setOrderNotice(''); setOrganizing(false); setOrderDraft([]);
+    setAdminSection(value); setSectionInput(value); setItems([]); setNext(null); setTotal(0);
+    const params = new URLSearchParams();
+    if (value) params.set('secao', value);
+    window.history.replaceState(null, '', '/admin' + (params.size ? '?' + params.toString() : ''));
+  }
   async function removeMoment(moment: Moment) {
     if (!window.confirm(`Excluir definitivamente esta publicação de ${moment.autor}?`)) return;
     setWorkingId(moment.id); setError('');
     try {
       await responseJson(await fetch(`/api/admin/momentos/${moment.id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } }));
       setItems(old => old.filter(m => m.id !== moment.id)); setTotal(x => Math.max(0, x - 1));
-    } catch (err) { setError(readableError(err, 'Não foi possível publicar agora. Se continuar, verifique os logs do servidor web.')); }
+    } catch (err) { setError(readableError(err)); }
     finally { setWorkingId(''); }
   }
   async function clearReactions(moment: Moment, emoji?: string) {
@@ -408,14 +454,93 @@ function Admin() {
         body: JSON.stringify(emoji ? { emoji } : {}),
       }));
       setItems(old => old.map(m => m.id === moment.id ? { ...m, reacoes: data.reacoes } : m));
-    } catch (err) { setError(readableError(err, 'Não foi possível publicar agora. Se continuar, verifique os logs do servidor web.')); }
+    } catch (err) { setError(readableError(err)); }
     finally { setWorkingId(''); }
   }
+  async function openOrganizer() {
+    setOrganizing(true); setOrderLoading(true); setError(''); setOrderNotice('');
+    try {
+      const params = new URLSearchParams();
+      if (adminSection) params.set('secao', adminSection);
+      const response = await responseJson<{ items: Moment[]; version: string }>(await fetch('/api/admin/ordem?' + params.toString(), {
+        headers: { Authorization: `Bearer ${token}` }, cache: 'no-store',
+      }));
+      setOrderOriginal(response.items); setOrderDraft(response.items); setOrderVersion(response.version);
+    } catch (err) { setOrderDraft([]); setError(readableError(err)); }
+    finally { setOrderLoading(false); }
+  }
+  function closeOrganizer() {
+    if (dirty && !window.confirm('Descartar as alterações que ainda não foram salvas?')) return;
+    setOrganizing(false); setOrderNotice(''); setDraggingId(null);
+  }
+  function moveTo(sourceId: string, targetId: string) {
+    setOrderDraft(old => movePublication(old, sourceId, targetId));
+    setOrderNotice('');
+  }
+  async function saveOrder() {
+    if (!dirty || orderSaving) return;
+    setOrderSaving(true); setError(''); setOrderNotice('');
+    try {
+      const result = await responseJson<{ ok: boolean; version: string }>(await fetch('/api/admin/ordem', {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: orderDraft.map(moment => moment.id), version: orderVersion, secao: adminSection }),
+      }));
+      setOrderOriginal([...orderDraft]); setOrderVersion(result.version);
+      setOrderNotice('Ordem salva! As publicações já aparecem nessa sequência no mural.');
+      void loadItems();
+    } catch (err) { setError(readableError(err)); }
+    finally { setOrderSaving(false); }
+  }
+  const locked = orderSaving || orderLoading;
   return <div className="admin-page"><header className="admin-header"><a href="/" className="brand">amanda<span className="brand-star">✳</span><small>admin</small></a><a href="/" className="back-to-wall">← Voltar ao mural</a>{authorized && <button className="btn btn-outline" onClick={logout}>Sair</button>}</header>
-    <main className="admin-main"><div className="admin-title"><span className="eyebrow green">PAINEL PARTICULAR</span><h1>Nos bastidores <span>✳</span></h1><p>Gerencie as publicações e reações que aparecem no mural.</p></div>
+    <main className="admin-main"><div className="admin-title"><span className="eyebrow green">PAINEL PARTICULAR</span><h1>Nos bastidores <span>✳</span></h1><p>Gerencie as publicações, reações e a ordem das lembranças de cada mural.</p></div>
       {!authorized ? <form className="admin-login" onSubmit={login}><span className="login-icon">🔒</span><h2>Acesso administrativo</h2><p>Use o token ADMIN_TOKEN configurado no servidor.</p><label className="field-label">Token administrativo<input type="password" value={input} onChange={e => setInput(e.target.value)} autoComplete="off" placeholder="Cole seu token aqui" /></label>{error && <p className="inline-error" role="alert">{error}</p>}<button className="btn btn-primary" disabled={checking || !input.trim()}>{checking ? 'Verificando…' : 'Entrar no painel ↗'}</button></form>
-        : <><div className="admin-stats"><div><strong>{total}</strong><span>Publicações totais</span></div><div><strong>{items.reduce((sum, m) => sum + Object.values(m.reacoes).reduce((a, b) => a + b, 0), 0)}</strong><span>Reações carregadas</span></div></div>
+        : <><form className="admin-section-picker" onSubmit={switchSection}>
+            <label htmlFor="admin-section">Selecionar mural</label>
+            <div><input id="admin-section" value={sectionInput} onChange={e => setSectionInput(e.target.value)} placeholder="Principal (vazio) ou ex.: gemeo" />
+              <button className="btn btn-primary" type="submit">Abrir mural</button></div>
+            <p>Atual: <strong>{adminSection ? `/secreto/${adminSection}` : 'Mural principal /'}</strong> · {adminSection ? <a href={`/secreto/${adminSection}`} target="_blank" rel="noreferrer">Visualizar seção ↗</a> : <a href="/" target="_blank" rel="noreferrer">Visualizar principal ↗</a>}. Deixe o campo vazio para gerenciar o principal.</p>
+          </form><div className="admin-stats"><div><strong>{total}</strong><span>Publicações totais</span></div><div><strong>{items.reduce((sum, m) => sum + Object.values(m.reacoes).reduce((a, b) => a + b, 0), 0)}</strong><span>Reações carregadas</span></div></div>
+          <nav className="admin-mode-switch" aria-label="Modo do painel">
+            <button type="button" className={!organizing ? 'active' : ''} aria-current={!organizing ? 'page' : undefined} onClick={closeOrganizer} disabled={locked}>Gerenciar posts</button>
+            <button type="button" className={organizing ? 'active' : ''} aria-current={organizing ? 'page' : undefined} onClick={() => { if (!organizing) void openOrganizer(); }} disabled={locked}>✥ Organizar mural</button>
+          </nav>
           {error && <p className="inline-error" role="alert">{error}</p>}
+          {organizing ? <section className="organizer" aria-label="Organizar ordem do mural">
+            <div className="organizer-heading"><div><span className="eyebrow green">ARRUME AS LEMBRANÇAS</span><h2>Na ordem que você quiser.</h2><p>Arraste os cards pela alça <strong>⠿</strong> ou use as setas no celular. A primeira posição aparece primeiro no mural. Só muda depois de salvar.</p></div>
+              <div className="organizer-tools">
+                <button className="btn btn-outline" type="button" onClick={() => { setOrderDraft([...orderOriginal]); setOrderNotice(''); }} disabled={!dirty || locked}>Desfazer</button>
+                <button className="btn btn-primary" type="button" onClick={() => void saveOrder()} disabled={!dirty || locked}>{orderSaving ? 'Salvando…' : `Salvar ordem${dirty ? ' •' : ''}`}</button>
+              </div>
+            </div>
+            {orderNotice && <p className="organizer-success" role="status">✓ {orderNotice}</p>}
+            {orderLoading ? <p className="organizer-loading">Carregando publicações…</p> :
+              <div className="organizer-list">
+                {orderDraft.map((m, index) => <article className={`organizer-item${draggingId === m.id ? ' is-dragging' : ''}`} key={m.id} data-order-id={m.id}
+                  onDragOver={event => { if (draggedRef.current && !locked) event.preventDefault(); }}
+                  onDrop={event => { event.preventDefault(); if (draggedRef.current && !locked) moveTo(draggedRef.current, m.id); draggedRef.current = null; setDraggingId(null); }}>
+                  <span className="organizer-index">{String(index + 1).padStart(2, '0')}</span>
+                  <div className="organizer-thumbnail">{m.tipo === 'foto' ? <img src={m.url || ''} alt="" loading="lazy" /> : m.tipo === 'video' ? <><video src={m.url || ''} preload="metadata" muted playsInline /><span aria-hidden="true" className="organizer-play">▶</span></> : <span aria-hidden="true">✎</span>}</div>
+                  <div className="organizer-info"><strong>{m.autor}</strong><span>{TYPE_LABELS[m.tipo]} · {shortDate(m.criadoEm)}</span><p>{m.legenda || '(sem legenda)'}</p></div>
+                  <div className="organizer-controls">
+                    <button type="button" className="organizer-arrow" title="Mover para cima" aria-label={`Subir publicação de ${m.autor}`} onClick={() => { if (index > 0) moveTo(m.id, orderDraft[index - 1].id); }} disabled={index === 0 || locked}>↑</button>
+                    <button type="button" className="organizer-arrow" title="Mover para baixo" aria-label={`Descer publicação de ${m.autor}`} onClick={() => { if (index < orderDraft.length - 1) moveTo(m.id, orderDraft[index + 1].id); }} disabled={index === orderDraft.length - 1 || locked}>↓</button>
+                    <button type="button" className="organizer-arrow organizer-top" title="Mover para o início" aria-label={`Mover publicação de ${m.autor} para o início`} onClick={() => { if (index > 0) moveTo(m.id, orderDraft[0].id); }} disabled={index === 0 || locked}>⇈</button>
+                    <span className="organizer-handle" role="button" tabIndex={0} aria-label={`Arrastar publicação de ${m.autor}`} title="Arrastar para mudar a posição" draggable={!locked}
+                      onDragStart={event => { draggedRef.current = m.id; setDraggingId(m.id); event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('text/plain', m.id); }}
+                      onDragEnd={() => { draggedRef.current = null; setDraggingId(null); }}
+                      onPointerDown={event => { if (event.pointerType === 'mouse' || locked) return; pointerDragRef.current = { id: m.id, pointer: event.pointerId }; event.currentTarget.setPointerCapture(event.pointerId); setDraggingId(m.id); }}
+                      onPointerMove={event => { if (pointerDragRef.current?.id !== m.id || pointerDragRef.current.pointer !== event.pointerId) return; const target = (document.elementFromPoint(event.clientX, event.clientY) as HTMLElement | null)?.closest<HTMLElement>('[data-order-id]'); const targetId = target?.dataset.orderId; if (targetId && targetId !== m.id) moveTo(m.id, targetId); }}
+                      onPointerUp={() => { pointerDragRef.current = null; setDraggingId(null); }}
+                      onPointerCancel={() => { pointerDragRef.current = null; setDraggingId(null); }}
+                      onKeyDown={event => { if (event.key === 'ArrowUp' && index > 0) { event.preventDefault(); moveTo(m.id, orderDraft[index - 1].id); } if (event.key === 'ArrowDown' && index < orderDraft.length - 1) { event.preventDefault(); moveTo(m.id, orderDraft[index + 1].id); } }}>⠿</span>
+                  </div>
+                </article>)}
+                {!orderDraft.length && !error && <p className="admin-empty">Não há publicações para organizar.</p>}
+              </div>}
+            <div className="organizer-footer"><span>{orderDraft.length} publicações · {dirty ? 'Alterações não salvas' : 'Ordem atual salva'}</span><button type="button" className="btn btn-primary" onClick={() => void saveOrder()} disabled={!dirty || locked}>{orderSaving ? 'Salvando…' : 'Salvar ordem ↗'}</button></div>
+          </section> : <>
           <div className="admin-list"><div className="admin-list-title"><h2>Publicações</h2><span>{items.length} exibidas</span></div>
             {items.map(m => <article className="admin-item" key={m.id}>
               <div className="admin-thumb">{m.tipo === 'foto' ? <img src={m.url || ''} alt="" /> : m.tipo === 'video' ? <video src={m.url || ''} preload="none" /> : <span>✎</span>}</div>
@@ -427,9 +552,19 @@ function Admin() {
             {!items.length && <p className="admin-empty">Nenhuma publicação encontrada.</p>}
           </div>
           {next && <button className="btn btn-outline load-admin-more" onClick={() => void loadItems(next)}>Carregar mais publicações ↓</button>}
+          </>}
         </>}
     </main>
   </div>;
 }
 const path = window.location.pathname.replace(/\/+$/, '') || '/';
-createRoot(document.getElementById('root')!).render(path === '/gemeo' ? <Gemeo /> : path === '/admin' ? <Admin /> : <Wall />);
+let secretSection: string | null = null;
+if (path.startsWith('/secreto/')) {
+  try {
+    const decoded = decodeURIComponent(path.slice('/secreto/'.length)).toLowerCase();
+    if (decoded.length <= 120 && /^[a-z0-9_-]+(?:\/[a-z0-9_-]+)*$/.test(decoded)) secretSection = decoded;
+  } catch { /* endereço com codificação inválida */ }
+}
+createRoot(document.getElementById('root')!).render(path === '/gemeo' ? <Gemeo /> : path === '/admin' ? <Admin />
+  : path === '/secreto' || path.startsWith('/secreto/') ? secretSection ? <Wall secao={secretSection} /> : <main className="secret-invalid"><h1>Endereço de mural inválido</h1><p>Use /secreto/gemeo ou outro nome com letras, números e hífens.</p><a href="/">Voltar ao mural principal</a></main>
+  : <Wall />);
