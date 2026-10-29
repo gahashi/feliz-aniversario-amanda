@@ -1,6 +1,432 @@
-import React,{useState,useEffect,useRef} from 'react';import{createRoot}from'react-dom/client';import './style.css';
-type Moment={id:string;autor:string;legenda:string;url:string};
-function RosaScene(){return <svg viewBox="0 0 600 580" className="rosa-scene" role="img" aria-label="Ilustração de uma garota loira de olhos azuis e um alien fofo passeando de motoneta vermelha na praia"><defs><linearGradient id="sky" x2="0" y2="1"><stop stopColor="#d6eedb"/><stop offset="1" stopColor="#fff0c8"/></linearGradient></defs><rect x="30" y="30" width="540" height="490" rx="240" fill="url(#sky)"/><circle cx="407" cy="192" r="76" fill="#ffd68c"/><path d="M35 300 Q130 235 205 295 Q340 345 570 266 L570 440 L30 440Z" fill="#93ccc2"/><path d="M30 346 Q170 306 295 345 T570 330" fill="none" stroke="#edf8e6" strokeWidth="7"/><path d="M30 380 Q200 335 570 377 L570 470 Q300 565 30 470Z" fill="#efd9ae"/><path d="M55 459 Q310 417 545 459" fill="none" stroke="#d8bc8b" strokeWidth="3" strokeDasharray="9 15"/><g fill="none" stroke="#36664c" strokeWidth="4" strokeLinecap="round"><path d="M110 240q25-25 50 0m-25-12q25-25 50 0"/><path d="M488 324q-17-95 5-143"/><path d="M493 182q-45-37-76-10m76 10q27-43 66-24m-66 24q-47 1-56 29m56-29q35-7 53 22"/></g><g className="scooter-bob"><ellipse cx="300" cy="470" rx="165" ry="16" fill="#385641" opacity=".12"/><circle cx="195" cy="436" r="39" fill="#294b3b"/><circle cx="195" cy="436" r="20" fill="#f7f4e8"/><circle cx="425" cy="436" r="39" fill="#294b3b"/><circle cx="425" cy="436" r="20" fill="#f7f4e8"/><path d="M146 411q7-58 91-57h69q15 9 27 40h52l-22-81h32q39 60 54 100h-52q-3-28-30-28h-72q-6 39-57 39h-38q-26-44-54-13Z" fill="#e65c50" stroke="#8f3838" strokeWidth="3"/><path d="M179 362h119" stroke="#304e3c" strokeWidth="18" strokeLinecap="round"/><path d="M385 316l-8-53h-30" fill="none" stroke="#304e3c" strokeWidth="7" strokeLinecap="round"/><circle cx="380" cy="285" r="13" fill="#ffe7ac"/><path d="M267 337l40 40-27 28" fill="none" stroke="#fcdbbc" strokeWidth="20" strokeLinecap="round"/><path d="M234 253q32-25 55 8l-2 78h-55Z" fill="#f7faf0" stroke="#517252" strokeWidth="3"/><path d="M280 268l40 35 35-36" fill="none" stroke="#fcdbbc" strokeWidth="15" strokeLinecap="round"/><path d="M211 211q-8-84 57-75q61 2 53 98l-31 33-79-18Z" fill="#e6bb63"/><ellipse cx="262" cy="208" rx="38" ry="46" fill="#ffe0c1"/><path d="M223 197q-9-58 43-53q28 0 39 42q-31-8-38-24q-9 23-44 35" fill="#efd181"/><ellipse cx="248" cy="208" rx="5" ry="7" fill="#71b8df"/><ellipse cx="277" cy="208" rx="5" ry="7" fill="#71b8df"/><path d="M252 229q12 10 22-1" fill="none" stroke="#b97066" strokeWidth="3" strokeLinecap="round"/><circle cx="236" cy="222" r="7" fill="#eea396" opacity=".5"/><circle cx="288" cy="222" r="7" fill="#eea396" opacity=".5"/><g className="alien-wave"><path d="M169 290q-25-34-5-70m47 70q25-34 8-70" fill="none" stroke="#6d9659" strokeWidth="4"/><circle cx="165" cy="219" r="6" fill="#a9ce77"/><circle cx="219" cy="219" r="6" fill="#a9ce77"/><path d="M149 302q-7-51 44-54q50 3 40 56q-13 37-41 37q-29 0-43-39Z" fill="#b6d98b" stroke="#628953" strokeWidth="3"/><ellipse cx="172" cy="293" rx="9" ry="13" transform="rotate(-20 172 293)" fill="#345b40"/><ellipse cx="210" cy="293" rx="9" ry="13" transform="rotate(20 210 293)" fill="#345b40"/><path d="M184 316q9 6 16-1" fill="none" stroke="#345b40" strokeWidth="3" strokeLinecap="round"/><circle cx="160" cy="311" r="7" fill="#eca99d"/><circle cx="220" cy="311" r="7" fill="#eca99d"/><path d="M172 335l-7 18h54l-11-18" fill="#e9f0dd"/><path d="M157 328l-21-24-7-19" fill="none" stroke="#a3c879" strokeWidth="10" strokeLinecap="round"/></g><path d="M346 233q-8-15-17-4q-8 10 17 24q24-22 14-27q-7-4-14 7Z" fill="#e65c50"/></g><g fill="#608952"><path d="M78 375l4-10 4 10 10 4-10 4-4 10-4-10-10-4Z"/><path d="M454 109l4-10 4 10 10 4-10 4-4 10-4-10-10-4Z"/></g></svg>;}
-function App(){const[items,setItems]=useState<Moment[]>([]),[total,setTotal]=useState(0),[next,setNext]=useState<string|null>(null),[loading,setLoading]=useState(false),[error,setError]=useState(''),[upload,setUpload]=useState(false),[selected,setSelected]=useState<Moment|null>(null),[sending,setSending]=useState(false),[done,setDone]=useState(false),[file,setFile]=useState<File|null>(null),[preview,setPreview]=useState('');const sentinel=useRef<HTMLDivElement>(null),busy=useRef(false),dialog=useRef<HTMLDialogElement>(null);async function load(cursor?:string){if(busy.current)return;busy.current=true;setLoading(true);setError('');try{const r=await fetch('/api/momentos'+(cursor?'?cursor='+encodeURIComponent(cursor):''));if(!r.ok)throw Error('Não conseguimos carregar o mural.');const d=await r.json();setItems(old=>cursor?[...old,...d.items.filter((m:Moment)=>!old.some(o=>o.id===m.id))]:d.items);setTotal(d.total);setNext(d.next);}catch(e){setError((e as Error).message);}finally{busy.current=false;setLoading(false);}}useEffect(()=>{void load();},[]);useEffect(()=>{const o=new IntersectionObserver(e=>{if(e[0].isIntersecting&&next&&!error)void load(next);},{rootMargin:'400px'});if(sentinel.current)o.observe(sentinel.current);return()=>o.disconnect();},[next,error]);useEffect(()=>{if(!file){setPreview('');return;}const url=URL.createObjectURL(file);setPreview(url);return()=>URL.revokeObjectURL(url);},[file]);const opened=upload||!!selected;useEffect(()=>{if(!opened)return;const previous=document.activeElement as HTMLElement;document.body.style.overflow='hidden';dialog.current?.showModal();return()=>{dialog.current?.close();document.body.style.overflow='';previous?.focus();};},[opened]);function open(){setDone(false);setFile(null);setError('');setUpload(true);}function close(){if(sending)return;setUpload(false);setSelected(null);}async function send(e:React.FormEvent<HTMLFormElement>){e.preventDefault();if(!file)return;setSending(true);setError('');const data=new FormData(e.currentTarget);data.set('foto',file);try{const r=await fetch('/api/momentos',{method:'POST',body:data});const m=await r.json();if(!r.ok)throw Error(m.message||'Falha no envio.');setItems(old=>[m,...old]);setTotal(n=>n+1);setDone(true);setFile(null);}catch(e){setError((e as Error).message);}finally{setSending(false);}}
-return <><header><a href="#" className="brand">amanda<span>✳</span></a><span className="eyebrow edition">UM PRESENTINHO DA GENTE</span><button className="tiny" onClick={open}>mandar uma foto ♡</button></header><main><section className="hero"><div className="hero-copy"><span className="eyebrow birthday-tag">HOJE O SOL É TODO SEU ☀</span><h1>Feliz vida,<br/><span>Amanda</span><i>♡</i></h1><p>Que nunca falte praia, um rolê de Biz<br className="desktop-break"/> e gente boa pertinho de você.</p><p className="personal-note">A gente juntou um pouquinho do nosso amor aqui.</p><button className="primary" onClick={open}>Deixar uma lembrança <span>↗</span></button><a className="see-wall" href="#mural">ver nossos momentos ↓</a></div><div className="hero-art"><span className="art-label">de outro planeta,<br/>mas bem nossa.</span><RosaScene/><span className="rosa-label">um pedacinho do Rosa ☀</span></div><div className="hero-bottom"><span>OLHOS AZUIS · CORAÇÃO VERDE · BIZ VERMELHA</span><span>{total} lembranças com você ♡</span></div></section><div className="marquee" aria-hidden="true"><div>{Array.from({length:8},(_,i)=><span key={i}>pé na areia ✳ coração quentinho ♡ feliz aniversário, Amanda ☀ </span>)}</div></div><section className="wall" id="mural"><div className="wall-top"><div><span className="eyebrow">NOSSO CANTINHO DE MEMÓRIAS</span><h2>Você, a gente<br className="mobile-break"/> & esses dias <em>♡</em></h2></div><span className="scribble">foi tão bom<br/>estar com você.</span></div>{!items.length&&!loading&&!error&&<div className="empty"><div className="cards"><span>♡</span><span>✷</span><span>:)</span></div><h3>Vamos começar esse álbum?</h3><p>Um dia na praia, uma selfie, um rolê de última hora.<br/>Aquela foto que faz você sorrir quando lembra.</p><button className="primary" onClick={open}>Mandar nossa primeira foto ♡</button></div>}<div className="grid">{items.map((m,i)=><React.Fragment key={m.id}><button className={'photo color-'+i%4} style={{'--angle':`${[-3,2,-1,3][i%4]}deg`}as React.CSSProperties} onClick={()=>setSelected(m)}><div className="image"><img src={m.url} loading="lazy" alt={m.legenda||`Momento enviado por ${m.autor}`}/><span>#{String(i+1).padStart(2,'0')}</span></div><p>{m.legenda||'Esse dia foi tudo ♡'}</p><small>com carinho, {m.autor} ↗</small></button>{(i+1)%7===0&&<div className="quote">que a vida seja<br/>leve como<br/><em>um dia no Rosa.</em> ☀</div>}</React.Fragment>)}</div><div ref={sentinel} className="status" aria-live="polite">{loading?'Buscando boas histórias…':items.length&&!next?'Todos os momentos por enquanto. O próximo pode ser seu ♡':''}</div>{error&&!upload&&<p role="alert">{error} <button onClick={()=>void load(next||undefined)}>Tentar novamente</button></p>}<button className="end" onClick={open}>Tem mais uma lembrança boa aí? Manda pra cá ♡</button></section></main><footer>PRA VOCÊ LEMBRAR O QUANTO É QUERIDA.<span>para Amanda ♡</span></footer><button className="floating" onClick={open}>+ enviar foto</button>{opened&&<dialog ref={dialog} onCancel={e=>{e.preventDefault();close();}}><button className="close" aria-label="Fechar" onClick={close} disabled={sending}>×</button>{selected?<><img className="full" src={selected.url} alt={selected.legenda||'Momento com Amanda'}/><h2>{selected.legenda||'Um momento especial ♡'}</h2><p>Enviado por {selected.autor}</p></>:done?<div className="success"><span>✷</span><h2>Mais um carinho guardado ♡</h2><p>Seu momento já está no mural da Amanda.</p><button className="primary" onClick={()=>setDone(false)}>Enviar outra foto ↗</button></div>:<form onSubmit={send}><span className="eyebrow">MAIS UMA PRO ÁLBUM</span><h2>Uma foto.<br/>Um carinho.</h2><p>Escolhe uma foto e conta um pedacinho da história.</p><label className="file">{preview?<img src={preview} alt="Prévia da foto"/>:<><strong>+ escolher uma foto</strong><small>JPG, PNG ou WebP · até 12 MB</small></>}<input type="file" name="foto" required accept="image/jpeg,image/png,image/webp" disabled={sending} onChange={e=>{const f=e.target.files?.[0];if(f&&f.size>12*1024*1024){setError('Escolha uma foto de até 12 MB.');setFile(null);e.target.value='';}else{setFile(f||null);setError('');}}}/></label><label>Seu nome<input name="autor" autoComplete="name" required maxLength={60} placeholder="Como a Amanda te chama?" disabled={sending}/></label><label>Uma legenda (se quiser)<textarea name="legenda" maxLength={500} placeholder="Lembra desse dia? Foi quando…" disabled={sending}/></label>{error&&<p className="error" role="alert">{error}</p>}<button className="primary w-full" disabled={!file||sending}>{sending?'Enviando o carinho…':'Guardar essa lembrança ♡'}</button><small className="disclaimer">Envie fotos que vocês concordem em compartilhar.<br/>Quem tiver o link poderá ver o mural.</small></form>}</dialog>}</>;}
-createRoot(document.getElementById('root')!).render(<App/>);
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { createRoot } from 'react-dom/client';
+import coastalScene from './assets/praia-rosa-fundo.png';
+import coastalLoop from './assets/praia-rosa-loop.png';
+import amandaOnBiz from './assets/amanda-biz-alien.png';
+import Gemeo from './Gemeo';
+import './style.css';
+
+type Kind = 'foto' | 'video' | 'texto';
+type Moment = {
+  id: string;
+  autor: string;
+  legenda: string;
+  tipo: Kind;
+  url: string | null;
+  reacoes: Record<string, number>;
+  criadoEm: string;
+};
+type Page = { items: Moment[]; total: number; next: string | null };
+const EMOJIS = ['❤️', '😍', '😂', '🥹', '👽', '🔥'];
+const LIMITS = { foto: 12 * 1024 * 1024, video: 80 * 1024 * 1024, texto: 0 };
+const TYPE_LABELS: Record<Kind, string> = { foto: 'Foto', video: 'Vídeo', texto: 'Mensagem' };
+const TABS: { value: Kind; icon: string; label: string }[] = [
+  { value: 'foto', icon: '▧', label: 'Foto' },
+  { value: 'video', icon: '▷', label: 'Vídeo' },
+  { value: 'texto', icon: '✎', label: 'Mensagem' },
+];
+
+async function responseJson<T>(r: Response): Promise<T> {
+  const value = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error((value as { message?: string }).message || 'Ocorreu um problema. Tente novamente.');
+  return value as T;
+}
+function readableError(err: unknown, fallback = 'Ocorreu um problema. Tente novamente.') {
+  const message = (err as Error | undefined)?.message?.trim();
+  return message || fallback;
+}
+function shortDate(value: string) {
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? '' : new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'short' }).format(d);
+}
+function hashId(id: string) {
+  let h = 2166136261;
+  for (let i = 0; i < id.length; i++) h = Math.imul(h ^ id.charCodeAt(i), 16777619);
+  return h >>> 0;
+}
+// Os bilhetes entram em posições variadas do álbum, sem alterar a ordem salva no banco.
+function scatterMessages(items: Moment[]): Moment[] {
+  const result = items.filter(m => m.tipo !== 'texto');
+  for (const note of items.filter(m => m.tipo === 'texto')) {
+    result.splice(hashId(note.id) % (result.length + 1), 0, note);
+  }
+  return result;
+}
+
+function Reactions({ moment, onReact, disabled = false }: {
+  moment: Moment; onReact: (id: string, emoji: string) => void; disabled?: boolean;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const used = EMOJIS.filter(emoji => (moment.reacoes[emoji] || 0) > 0);
+  useEffect(() => {
+    if (!expanded) return;
+    const close = (event: MouseEvent) => {
+      if (!ref.current?.contains(event.target as Node)) setExpanded(false);
+    };
+    document.addEventListener('mousedown', close);
+    return () => document.removeEventListener('mousedown', close);
+  }, [expanded]);
+  return <div className="reactions" aria-label="Reações desta publicação" ref={ref}>
+    {used.map(emoji => <button key={emoji} className="reaction-pill" type="button"
+      onClick={() => onReact(moment.id, emoji)} disabled={disabled}
+      title={`Reagir com ${emoji}`} aria-label={`${emoji}: ${moment.reacoes[emoji] || 0} reações. Reagir.`}>
+      <span>{emoji}</span><span className="reaction-count">{moment.reacoes[emoji] || 0}</span>
+    </button>)}
+    <button className="reaction-more" type="button" title="Adicionar reação"
+      aria-label={expanded ? 'Fechar opções de emoji' : 'Adicionar reação'}
+      aria-expanded={expanded} onClick={() => setExpanded(!expanded)} disabled={disabled}>+</button>
+    {expanded && <div className="reaction-picker" role="menu" aria-label="Escolher reação">
+      {EMOJIS.map(emoji => <button key={emoji} className="reaction-choice" type="button"
+        onClick={() => { onReact(moment.id, emoji); setExpanded(false); }} disabled={disabled}>{emoji}</button>)}
+    </div>}
+  </div>;
+}
+function MomentCard({ moment, index, onOpen, onReact }: {
+  moment: Moment; index: number; onOpen: (moment: Moment) => void;
+  onReact: (id: string, emoji: string) => void;
+}) {
+  const variant = hashId(moment.id) % 5;
+  const isNote = moment.tipo === 'texto';
+  return <article className={`memory-card ${isNote ? 'note-card' : 'media-card'} paper-${variant}`}
+    style={{ '--rotation': `${[-1.8, 1.6, -.8, 1.25, -1.2, .65][index % 6]}deg`, '--lift': `${[0, 18, 4, 22, 10, 28][index % 6]}px` } as React.CSSProperties}>
+    <span className="card-tape" aria-hidden="true" />
+    {isNote ? <div className="note-content">
+      <span className="note-star" aria-hidden="true">✳</span>
+      <p>{moment.legenda}</p>
+      <span className="note-decoration" aria-hidden="true">♡ ✦</span>
+    </div> : <>
+      <button type="button" className="media-open" onClick={() => onOpen(moment)}
+        aria-label={`Abrir ${TYPE_LABELS[moment.tipo].toLowerCase()} de ${moment.autor}`}>
+        {moment.tipo === 'foto' ? <img src={moment.url || ''} alt={moment.legenda || `Foto de ${moment.autor}`} loading="lazy" />
+          : <><video src={moment.url || ''} preload="metadata" muted playsInline />
+            <span className="play-overlay" aria-hidden="true">▶</span></>}
+      </button>
+      {moment.legenda && <p className="media-caption">{moment.legenda}</p>}
+    </>}
+    <div className="card-byline"><span>de {moment.autor}</span><time dateTime={moment.criadoEm}>{shortDate(moment.criadoEm)}</time></div>
+    {!isNote && <Reactions moment={moment} onReact={onReact} />}
+  </article>;
+}
+function Modal({ children, onClose, locked = false }: {
+  children: React.ReactNode; onClose: () => void; locked?: boolean;
+}) {
+  const ref = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    const previous = document.activeElement as HTMLElement | null;
+    const dialog = ref.current;
+    dialog?.showModal();
+    document.body.classList.add('dialog-open');
+    return () => { dialog?.close(); document.body.classList.remove('dialog-open'); previous?.focus(); };
+  }, []);
+  return <dialog ref={ref} className="party-dialog" onCancel={event => { event.preventDefault(); if (!locked) onClose(); }}
+    onClick={event => { if (event.target === ref.current && !locked) onClose(); }}>
+    <button className="dialog-close" type="button" onClick={onClose} disabled={locked} aria-label="Fechar">✕</button>
+    {children}
+  </dialog>;
+}
+function Composer({ onClose, onCreated }: { onClose: () => void; onCreated: (moment: Moment) => void }) {
+  const [kind, setKind] = useState<Kind>('foto');
+  const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState('');
+  const [author, setAuthor] = useState('');
+  const [caption, setCaption] = useState('');
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [success, setSuccess] = useState(false);
+  useEffect(() => {
+    if (!file) { setPreview(''); return; }
+    const url = URL.createObjectURL(file);
+    setPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file]);
+  function changeKind(next: Kind) {
+    setKind(next); setFile(null); setCaption(''); setError('');
+  }
+  function chooseFile(next: File | null) {
+    if (!next) { setFile(null); return; }
+    const validMime = kind === 'foto'
+      ? ['image/jpeg', 'image/png', 'image/webp'].includes(next.type)
+      : ['video/mp4', 'video/webm'].includes(next.type);
+    if (!validMime) { setError('Formato não aceito. Escolha ' + (kind === 'foto' ? 'JPG, PNG ou WebP.' : 'MP4 ou WebM.')); setFile(null); return; }
+    if (next.size > LIMITS[kind]) { setError(`Arquivo muito grande. Máximo: ${kind === 'foto' ? 12 : 80} MB.`); setFile(null); return; }
+    setError(''); setFile(next);
+  }
+  async function submit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (kind !== 'texto' && !file) return;
+    if (kind === 'texto' && !caption.trim()) { setError('Escreva uma mensagem.'); return; }
+    setBusy(true); setError('');
+    const data = new FormData();
+    data.set('tipo', kind); data.set('autor', author.trim()); data.set('legenda', caption.trim());
+    if (file) data.set('arquivo', file);
+    try {
+      const created = await responseJson<Moment>(await fetch('/api/momentos', { method: 'POST', body: data }));
+      onCreated(created); setSuccess(true);
+    } catch (err) { setError(readableError(err, 'Não foi possível publicar agora. Se continuar, verifique os logs do servidor web.')); }
+    finally { setBusy(false); }
+  }
+  if (success) return <Modal onClose={onClose}><div className="upload-success">
+    <span className="success-icon">💌</span><p className="eyebrow">RECADO RECEBIDO!</p>
+    <h2>Mais amor<br />nesse mural ♡</h2>
+    <p>Sua lembrança já faz parte dessa história.</p>
+    <button className="btn btn-primary" onClick={onClose}>Ver no mural <span>↗</span></button>
+    <button className="text-link" onClick={() => { setSuccess(false); setFile(null); setCaption(''); }}>Enviar mais uma</button>
+  </div></Modal>;
+  return <Modal onClose={onClose} locked={busy}><div className="composer">
+    <p className="eyebrow green">DEIXE SUA MARCA</p>
+    <h2>Um carinho<br />pra Amanda <span>♡</span></h2>
+    <p className="composer-intro">Uma foto, um vídeo ou aquelas palavras que ficam pra sempre.</p>
+    <div className="kind-switch" role="group" aria-label="Tipo de publicação">
+      {TABS.map(tab => <button type="button" className={kind === tab.value ? 'active' : ''}
+        key={tab.value} onClick={() => changeKind(tab.value)} disabled={busy}>
+        <span aria-hidden="true">{tab.icon}</span> {tab.label}</button>)}
+    </div>
+    <form onSubmit={submit}>
+      {kind !== 'texto' && <label className={`dropzone ${preview ? 'has-preview' : ''}`}>
+        {preview ? kind === 'foto'
+          ? <img src={preview} alt="Prévia da foto" />
+          : <video src={preview} muted playsInline controls preload="metadata" />
+          : <span className="dropzone-empty"><span className="drop-icon">{kind === 'foto' ? '▧' : '▷'}</span>
+              <strong>{kind === 'foto' ? 'Escolher uma foto' : 'Escolher um vídeo'}</strong>
+              <small>{kind === 'foto' ? 'JPG, PNG ou WebP · até 12 MB' : 'MP4 ou WebM · até 80 MB (MP4 H.264 recomendado)'}</small>
+            </span>}
+        <input type="file" accept={kind === 'foto' ? 'image/jpeg,image/png,image/webp' : 'video/mp4,video/webm'}
+          onChange={e => { chooseFile(e.target.files?.[0] || null); }} disabled={busy} />
+        {preview && <span className="change-file">Trocar arquivo ↗</span>}
+      </label>}
+      <label className="field-label">Seu nome <span>(opcional)</span>
+        <input value={author} onChange={e => setAuthor(e.target.value)} maxLength={60}
+          placeholder="Como a Amanda te chama?" disabled={busy} />
+      </label>
+      <label className="field-label">{kind === 'texto' ? 'Sua mensagem' : 'Legenda'} <span>{kind !== 'texto' && '(opcional)'}</span>
+        <textarea value={caption} onChange={e => setCaption(e.target.value)}
+          required={kind === 'texto'} maxLength={500} rows={kind === 'texto' ? 6 : 3}
+          placeholder={kind === 'texto' ? 'Amanda, que nunca faltem histórias boas pra contar…' : 'Conta um pouquinho dessa lembrança…'} disabled={busy} />
+        <small className="char-count">{caption.length}/500</small>
+      </label>
+      {error && <p className="inline-error" role="alert">{error}</p>}
+      <button className="btn btn-primary submit-btn" disabled={busy || (kind !== 'texto' && !file) || (kind === 'texto' && !caption.trim())}>
+        {busy ? 'Publicando…' : 'Colocar no mural'} <span>↗</span>
+      </button>
+      <p className="privacy-note">O mural é público para quem tiver o link. Envie somente o que pode ser compartilhado.</p>
+    </form>
+  </div></Modal>;
+}
+function Detail({ moment, onClose, onReact }: {
+  moment: Moment; onClose: () => void; onReact: (id: string, emoji: string) => void;
+}) {
+  return <Modal onClose={onClose}><div className="detail">
+    {moment.tipo === 'video'
+      ? <video className="detail-media" src={moment.url || ''} controls autoPlay playsInline preload="metadata" />
+      : moment.tipo === 'foto' ? <img className="detail-media" src={moment.url || ''} alt={moment.legenda || 'Lembrança com Amanda'} />
+        : <p className="detail-note">{moment.legenda}</p>}
+    {moment.legenda && moment.tipo !== 'texto' && <h2>{moment.legenda}</h2>}
+    <p className="detail-byline">Com carinho, {moment.autor} ♡</p>
+    <Reactions moment={moment} onReact={onReact} />
+  </div></Modal>;
+}
+function Wall() {
+  const [items, setItems] = useState<Moment[]>([]);
+  const [total, setTotal] = useState(0);
+  const [next, setNext] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [composer, setComposer] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const sentinel = useRef<HTMLDivElement>(null);
+  const muralRef = useRef<HTMLElement>(null);
+  const loadingRef = useRef(false);
+  const generation = useRef(0);
+  const requestController = useRef<AbortController | null>(null);
+  const fetchPage = useCallback(async (cursor: string | null, replace = false) => {
+    if (loadingRef.current && !replace) return;
+    if (replace) { generation.current++; requestController.current?.abort(); loadingRef.current = false; }
+    const currentGeneration = generation.current;
+    const controller = new AbortController(); requestController.current = controller;
+    loadingRef.current = true; setLoading(true); setError('');
+    try {
+      const params = new URLSearchParams();
+      if (cursor) params.set('cursor', cursor);
+      const result = await responseJson<Page>(await fetch('/api/momentos?' + params.toString(), { signal: controller.signal }));
+      if (currentGeneration !== generation.current) return;
+      setItems(old => replace ? result.items : [...old, ...result.items.filter(x => !old.some(y => x.id === y.id))]);
+      setNext(result.next); setTotal(result.total);
+    } catch (err) {
+      if ((err as Error).name !== 'AbortError' && currentGeneration === generation.current) setError(readableError(err));
+    } finally {
+      if (currentGeneration === generation.current) { setLoading(false); loadingRef.current = false; }
+    }
+  }, []);
+  useEffect(() => {
+    setItems([]); setNext(null);
+    void fetchPage(null, true);
+    return () => { requestController.current?.abort(); generation.current++; loadingRef.current = false; };
+  }, [fetchPage]);
+  useEffect(() => {
+    const node = sentinel.current;
+    if (!node || !next || loading || error) return;
+    const obs = new IntersectionObserver(entries => { if (entries[0]?.isIntersecting) void fetchPage(next); }, { rootMargin: '500px' });
+    obs.observe(node); return () => obs.disconnect();
+  }, [next, loading, error, fetchPage]);
+  useEffect(() => {
+    let raf = 0;
+    const update = () => {
+      raf = 0;
+      const max = Math.max(1, document.documentElement.scrollHeight - innerHeight);
+      const progress = Math.min(1, window.scrollY / max);
+      document.documentElement.style.setProperty('--travel-progress', `${(progress * 100).toFixed(2)}%`);
+      const mural = muralRef.current;
+      if (mural) {
+        const bounds = mural.getBoundingClientRect();
+        document.documentElement.classList.toggle('past-hero', bounds.top < 30);
+        // Quantidade absoluta rolada no mural: descer = esquerda; subir = direita.
+        // O PNG possui a paisagem + a mesma paisagem espelhada para fechar o loop.
+        const inside = Math.max(0, -bounds.top);
+        const shift = Math.round(inside * -0.32);
+        mural.style.setProperty('--mural-loop-x', `${shift}px`);
+      }
+    };
+    const scroll = () => { if (!raf) raf = requestAnimationFrame(update); };
+    update(); window.addEventListener('scroll', scroll, { passive: true }); window.addEventListener('resize', scroll);
+    return () => { window.removeEventListener('scroll', scroll); window.removeEventListener('resize', scroll); cancelAnimationFrame(raf); document.documentElement.classList.remove('past-hero'); };
+  }, []);
+  async function reactTo(id: string, emoji: string) {
+    const increase = (m: Moment, delta: number): Moment => m.id !== id ? m : {
+      ...m, reacoes: { ...m.reacoes, [emoji]: Math.max(0, (m.reacoes[emoji] || 0) + delta) },
+    };
+    setItems(prev => prev.map(m => increase(m, 1)));
+    try {
+      await responseJson(await fetch(`/api/momentos/${encodeURIComponent(id)}/reacoes`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ emoji }),
+      }));
+    } catch (err) { setItems(prev => prev.map(m => increase(m, -1))); setError(readableError(err)); }
+  }
+  const selected = selectedId ? items.find(m => m.id === selectedId) || null : null;
+  const visible = scatterMessages(items);
+  return <div className="site-shell">
+    <div className="reading-progress" aria-hidden="true" />
+    <header className="topbar">
+      <a href="/" className="brand" aria-label="Amanda Party, início">amanda<span className="brand-star">✳</span><small>party</small></a>
+      <a href="#mural" className="header-wall">o mural ↓</a>
+      <button className="btn btn-top" onClick={() => setComposer(true)}>+ escrever</button>
+    </header>
+    <main>
+      <section className="hero hero-journey" aria-labelledby="hero-title">
+        <div className="hero-stage">
+          <div className="hero-scene" aria-hidden="true" style={{ backgroundImage: `url(${coastalScene})` }} />
+          <div className="hero-shade" aria-hidden="true" />
+          <div className="hero-copy">
+            <p className="hero-kicker"><span className="kicker-dot"/> PRAIA, BRISA E UM DIA TODO SEU</p>
+            <h1 id="hero-title">Feliz<br/>aniversário,<br/><em>Amanda.</em></h1>
+            <p className="hero-description">Entre o mar e a estrada, fizemos esse cantinho para guardar carinho, memórias e recados. <strong>As lembranças estão logo abaixo.</strong></p>
+            <div className="hero-actions"><button className="btn btn-primary" onClick={() => setComposer(true)}>Deixar uma lembrança <span aria-hidden="true">↗</span></button><a href="#mural" className="see-memories">Explorar o mural <span aria-hidden="true">↓</span></a></div>
+          </div>
+          <div className="rider-path" aria-hidden="true"><div className="rider-float"><img src={amandaOnBiz} alt="" className="hero-biz" /></div></div>
+          <div className="hero-bottom"><span>01 / UM DIA ESPECIAL</span><div className="scroll-cue"><span>DESLIZE PARA VER AS LEMBRANÇAS</span><span className="scroll-arrow">↓</span></div><span className="hero-memories">{total} lembrança{total === 1 ? '' : 's'} no mural</span></div>
+        </div>
+      </section>
+      <div className="coast-transition" aria-hidden="true"><span>PEQUENAS HISTÓRIAS, GRANDES LEMBRANÇAS</span></div>
+      <section id="mural" ref={muralRef} className="mural-section" aria-label="Mural de lembranças">
+        <div className="mural-background-track" aria-hidden="true">
+          <div className="mural-background-image" style={{ backgroundImage: `url(${coastalLoop})` }} />
+          <div className="mural-background-wash" />
+        </div>
+        <div className="mural-content">
+        <div className="mural-heading"><span className="section-overline">PARADA 01 · MEMÓRIAS</span><h2>Um mar de<br/><em>gente querida.</em></h2><p>Aqui cabe tudo: foto bonita, vídeo engraçado ou uma mensagem do coração.</p></div>        <div className="mural-meta"><span className="mural-count">{total} lembrança{total === 1 ? '' : 's'} no mural</span></div>
+        {!loading && !items.length && !error && <div className="empty-state"><span>♡</span><h3>A primeira lembrança pode ser sua.</h3><p>Deixa uma foto, vídeo ou recadinho pra Amanda!</p><button className="btn btn-primary" onClick={() => setComposer(true)}>Publicar uma lembrança ↗</button></div>}
+        <div className="masonry-grid">
+          {visible.map((moment, i) => <MomentCard key={moment.id} moment={moment} index={i} onOpen={m => setSelectedId(m.id)} onReact={reactTo} />)}
+        </div>
+        <div ref={sentinel} className="wall-status" aria-live="polite">
+          {loading ? 'Buscando mais lembranças…' : !next && items.length ? 'Esse é o fim do mural. Mas as histórias continuam. ♡' : ''}
+          {error && <p className="inline-error" role="alert">{error} <button onClick={() => void fetchPage(next)}>Tentar novamente</button></p>}
+        </div>
+        <div className="end-cta"><span className="cta-doodle" aria-hidden="true">✳</span><p>Uma lembrança sua também faz parte dessa história.</p><button className="btn btn-outline" onClick={() => setComposer(true)}>Enviar carinho ↗</button></div>
+        </div>
+      </section>
+      <section className="closing-coast" aria-hidden="true"><div className="closing-coast-line"/><span>fim da estrada, começo das lembranças ♡</span></section>
+    </main>
+    <footer className="site-footer"><div><a href="/" className="footer-logo">amanda ✳</a><span>feito com amor, brisa do mar e algumas risadas.</span></div><a href="/admin" className="admin-access">admin</a></footer>
+    <button className="floating-create" onClick={() => setComposer(true)} aria-label="Adicionar lembrança">+ <span>Deixar recado</span></button>
+    {composer && <Composer onClose={() => setComposer(false)} onCreated={created => { setTotal(n => n + 1); setItems(old => [created, ...old]); }} />}
+    {selected && <Detail moment={selected} onClose={() => setSelectedId(null)} onReact={reactTo} />}
+  </div>;
+}
+function Admin() {
+  const [token, setToken] = useState(() => sessionStorage.getItem('amanda-admin-token') || '');
+  const [input, setInput] = useState('');
+  const [authorized, setAuthorized] = useState(false);
+  const [error, setError] = useState('');
+  const [checking, setChecking] = useState(false);
+  const [items, setItems] = useState<Moment[]>([]);
+  const [next, setNext] = useState<string | null>(null);
+  const [total, setTotal] = useState(0);
+  const [workingId, setWorkingId] = useState('');
+  const loadItems = useCallback(async (cursor?: string) => {
+    try {
+      const page = await responseJson<Page>(await fetch('/api/momentos' + (cursor ? '?cursor=' + encodeURIComponent(cursor) : ''), { cache: 'no-store' }));
+      setItems(old => cursor ? [...old, ...page.items.filter(m => !old.some(x => x.id === m.id))] : page.items);
+      setNext(page.next); setTotal(page.total);
+    } catch (err) { setError(readableError(err, 'Não foi possível publicar agora. Se continuar, verifique os logs do servidor web.')); }
+  }, []);
+  useEffect(() => {
+    if (!token) return;
+    let ignore = false;
+    setChecking(true);
+    fetch('/api/admin/session', { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => responseJson<{ ok: boolean }>(r))
+      .then(() => { if (!ignore) { setAuthorized(true); setError(''); void loadItems(); } })
+      .catch(() => { if (!ignore) { setAuthorized(false); setToken(''); setError('Token inválido.'); sessionStorage.removeItem('amanda-admin-token'); } })
+      .finally(() => { if (!ignore) setChecking(false); });
+    return () => { ignore = true; };
+  }, [token, loadItems]);
+  async function login(event: React.FormEvent) {
+    event.preventDefault();
+    if (!input.trim()) return;
+    setError(''); sessionStorage.setItem('amanda-admin-token', input.trim()); setToken(input.trim()); setInput('');
+  }
+  function logout() { sessionStorage.removeItem('amanda-admin-token'); setToken(''); setAuthorized(false); setItems([]); setError(''); }
+  async function removeMoment(moment: Moment) {
+    if (!window.confirm(`Excluir definitivamente esta publicação de ${moment.autor}?`)) return;
+    setWorkingId(moment.id); setError('');
+    try {
+      await responseJson(await fetch(`/api/admin/momentos/${moment.id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } }));
+      setItems(old => old.filter(m => m.id !== moment.id)); setTotal(x => Math.max(0, x - 1));
+    } catch (err) { setError(readableError(err, 'Não foi possível publicar agora. Se continuar, verifique os logs do servidor web.')); }
+    finally { setWorkingId(''); }
+  }
+  async function clearReactions(moment: Moment, emoji?: string) {
+    if (!window.confirm(emoji ? `Zerar as reações ${emoji} desta publicação?` : 'Remover TODAS as reações desta publicação?')) return;
+    setWorkingId(moment.id); setError('');
+    try {
+      const data = await responseJson<{ reacoes: Record<string, number> }>(await fetch(`/api/admin/momentos/${moment.id}/reacoes`, {
+        method: 'DELETE', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(emoji ? { emoji } : {}),
+      }));
+      setItems(old => old.map(m => m.id === moment.id ? { ...m, reacoes: data.reacoes } : m));
+    } catch (err) { setError(readableError(err, 'Não foi possível publicar agora. Se continuar, verifique os logs do servidor web.')); }
+    finally { setWorkingId(''); }
+  }
+  return <div className="admin-page"><header className="admin-header"><a href="/" className="brand">amanda<span className="brand-star">✳</span><small>admin</small></a><a href="/" className="back-to-wall">← Voltar ao mural</a>{authorized && <button className="btn btn-outline" onClick={logout}>Sair</button>}</header>
+    <main className="admin-main"><div className="admin-title"><span className="eyebrow green">PAINEL PARTICULAR</span><h1>Nos bastidores <span>✳</span></h1><p>Gerencie as publicações e reações que aparecem no mural.</p></div>
+      {!authorized ? <form className="admin-login" onSubmit={login}><span className="login-icon">🔒</span><h2>Acesso administrativo</h2><p>Use o token ADMIN_TOKEN configurado no servidor.</p><label className="field-label">Token administrativo<input type="password" value={input} onChange={e => setInput(e.target.value)} autoComplete="off" placeholder="Cole seu token aqui" /></label>{error && <p className="inline-error" role="alert">{error}</p>}<button className="btn btn-primary" disabled={checking || !input.trim()}>{checking ? 'Verificando…' : 'Entrar no painel ↗'}</button></form>
+        : <><div className="admin-stats"><div><strong>{total}</strong><span>Publicações totais</span></div><div><strong>{items.reduce((sum, m) => sum + Object.values(m.reacoes).reduce((a, b) => a + b, 0), 0)}</strong><span>Reações carregadas</span></div></div>
+          {error && <p className="inline-error" role="alert">{error}</p>}
+          <div className="admin-list"><div className="admin-list-title"><h2>Publicações</h2><span>{items.length} exibidas</span></div>
+            {items.map(m => <article className="admin-item" key={m.id}>
+              <div className="admin-thumb">{m.tipo === 'foto' ? <img src={m.url || ''} alt="" /> : m.tipo === 'video' ? <video src={m.url || ''} preload="none" /> : <span>✎</span>}</div>
+              <div className="admin-item-info"><strong>{TYPE_LABELS[m.tipo]} · {m.autor}</strong><p>{m.legenda || '(sem legenda)'}</p><small>{shortDate(m.criadoEm)} · {m.id}</small></div>
+              <div className="admin-actions"><div className="admin-reactions">{EMOJIS.filter(e => m.reacoes[e]).map(e => <button title={`Zerar ${e}`} key={e} onClick={() => void clearReactions(m, e)} disabled={workingId === m.id}>{e} {m.reacoes[e]} ×</button>)}</div>
+                <div className="admin-buttons"><button className="btn btn-outline" onClick={() => void clearReactions(m)} disabled={workingId === m.id || !Object.keys(m.reacoes).length}>Limpar reações</button><button className="btn btn-danger" onClick={() => void removeMoment(m)} disabled={workingId === m.id}>{workingId === m.id ? 'Processando…' : 'Excluir'}</button></div>
+              </div>
+            </article>)}
+            {!items.length && <p className="admin-empty">Nenhuma publicação encontrada.</p>}
+          </div>
+          {next && <button className="btn btn-outline load-admin-more" onClick={() => void loadItems(next)}>Carregar mais publicações ↓</button>}
+        </>}
+    </main>
+  </div>;
+}
+const path = window.location.pathname.replace(/\/+$/, '') || '/';
+createRoot(document.getElementById('root')!).render(path === '/gemeo' ? <Gemeo /> : path === '/admin' ? <Admin /> : <Wall />);
