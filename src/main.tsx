@@ -5,6 +5,7 @@ import coastalLoop from './assets/praia-rosa-loop.png';
 import amandaOnBiz from './assets/amanda-biz-alien.png';
 import Gemeo from './Gemeo';
 import './style.css';
+import './v9.css';
 
 type Kind = 'foto' | 'video' | 'texto';
 type Moment = {
@@ -284,7 +285,7 @@ function Wall() {
         // O PNG possui a paisagem + a mesma paisagem espelhada para fechar o loop.
         const inside = Math.max(0, -bounds.top);
         const shift = Math.round(inside * -0.32);
-        mural.style.setProperty('--mural-loop-x', `${shift}px`);
+        document.documentElement.style.setProperty('--mural-loop-x', `${shift}px`);
       }
     };
     const scroll = () => { if (!raf) raf = requestAnimationFrame(update); };
@@ -319,6 +320,8 @@ function Wall() {
           <div className="hero-copy">
             <p className="hero-kicker"><span className="kicker-dot"/> PRAIA, BRISA E UM DIA TODO SEU</p>
             <h1 id="hero-title">Feliz<br/>aniversário,<br/><em>Amanda.</em></h1>
+          </div>
+          <div className="hero-tail">
             <p className="hero-description">Entre o mar e a estrada, fizemos esse cantinho para guardar carinho, memórias e recados. <strong>As lembranças estão logo abaixo.</strong></p>
             <div className="hero-actions"><button className="btn btn-primary" onClick={() => setComposer(true)}>Deixar uma lembrança <span aria-hidden="true">↗</span></button><a href="#mural" className="see-memories">Explorar o mural <span aria-hidden="true">↓</span></a></div>
           </div>
