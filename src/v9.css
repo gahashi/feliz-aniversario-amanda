@@ -1,0 +1,302 @@
+/* Amanda Party V9 — hero em áreas independentes, mural realmente fixo e 2 colunas.
+   Importar após style.css; substitui o patch de layout V8. */
+
+/* HERO: sem sticky, sem camadas de texto por cima da Biz.
+   Desktop: título e recado à esquerda, moto no próprio espaço à direita.
+   Mobile: título -> moto -> mensagem -> ações -> rodapé. */
+.site-shell .hero-journey {
+  display: block !important;
+  height: auto !important;
+  min-height: 0 !important;
+  overflow: visible;
+  isolation: isolate;
+  position: relative;
+  z-index: 3;
+}
+.site-shell .hero-journey .hero-stage {
+  position: relative !important;
+  top: auto !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  grid-template-areas: "intro moto" "tail moto" "bottom bottom";
+  grid-template-rows: auto 1fr auto;
+  align-items: center;
+  align-content: center;
+  column-gap: clamp(24px, 4vw, 80px);
+  row-gap: clamp(12px, 2vw, 30px);
+  height: auto !important;
+  min-height: min(790px, 100svh) !important;
+  padding: clamp(110px, 12vw, 158px) clamp(38px, 6.7vw, 110px) 28px;
+  overflow: hidden;
+  background: #294d44;
+  isolation: isolate;
+}
+.site-shell .hero-journey .hero-scene,
+.site-shell .hero-journey .hero-shade {
+  position: absolute;
+  pointer-events: none;
+}
+.site-shell .hero-journey .hero-scene {
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  transform: none !important;
+  background-size: cover;
+  background-position: center 52%;
+}
+.site-shell .hero-journey .hero-copy {
+  grid-area: intro;
+  position: relative !important;
+  inset: auto !important;
+  top: auto !important;
+  left: auto !important;
+  right: auto !important;
+  width: 100% !important;
+  max-width: none !important;
+  padding: 0 !important;
+  margin: 0;
+  z-index: 5;
+  transform: none !important;
+  opacity: 1 !important;
+  align-self: end;
+}
+.site-shell .hero-journey .hero-kicker {margin: 0;}
+.site-shell .hero-journey h1 {
+  font-size: clamp(56px, 6.2vw, 105px);
+  line-height: .98;
+  letter-spacing: -.045em;
+  margin: 24px 0 0;
+  overflow-wrap: normal;
+}
+.site-shell .hero-journey h1 em {letter-spacing: -.045em;}
+.site-shell .hero-journey .hero-tail {
+  grid-area: tail;
+  position: relative;
+  z-index: 5;
+  align-self: start;
+  max-width: 470px;
+}
+.site-shell .hero-journey .hero-description {
+  margin: 0 0 20px;
+  max-width: 470px;
+  line-height: 1.66;
+}
+.site-shell .hero-journey .hero-actions {gap: 12px 16px;}
+.site-shell .hero-journey .rider-path {
+  grid-area: moto;
+  position: relative !important;
+  inset: auto !important;
+  top: auto !important;
+  bottom: auto !important;
+  left: auto !important;
+  right: auto !important;
+  align-self: center;
+  justify-self: center;
+  z-index: 3;
+  display: block;
+  width: min(100%, 640px) !important;
+  height: auto !important;
+  margin: 0;
+  padding: 0;
+  transform: none !important;
+  will-change: auto;
+  pointer-events: none;
+}
+.site-shell .hero-journey .rider-float {
+  position: relative !important;
+  inset: auto !important;
+  bottom: auto !important;
+  right: auto !important;
+  width: 100%;
+  animation: none !important;
+  transform: none !important;
+}
+.site-shell .hero-journey .hero-biz {
+  position: relative;
+  display: block;
+  width: 100% !important;
+  max-width: 100% !important;
+  height: auto;
+  right: auto !important;
+  bottom: auto !important;
+  transform: none !important;
+}
+.site-shell .hero-journey .hero-bottom {
+  grid-area: bottom;
+  position: relative !important;
+  inset: auto !important;
+  bottom: auto !important;
+  left: auto !important;
+  right: auto !important;
+  width: 100% !important;
+  margin: 16px 0 0;
+  padding: 12px 16px;
+  min-height: 48px;
+  z-index: 5;
+  background: rgba(13, 34, 28, .32);
+  border-radius: 7px;
+}
+
+@media (max-width: 899px) {
+  .site-shell .hero-journey .hero-stage {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "intro" "moto" "tail" "bottom";
+    grid-template-rows: auto auto auto auto;
+    row-gap: 0;
+    min-height: 0 !important;
+    padding: 105px clamp(20px, 5.5vw, 38px) 24px;
+  }
+  .site-shell .hero-journey .hero-copy,
+  .site-shell .hero-journey .hero-tail {
+    width: 100% !important;
+    max-width: 610px !important;
+    justify-self: center;
+  }
+  .site-shell .hero-journey h1 {
+    font-size: clamp(48px, 12.3vw, 82px);
+    line-height: .99;
+    margin: 19px 0 0;
+  }
+  .site-shell .hero-journey .rider-path {
+    width: min(100%, 485px) !important;
+    margin: 18px auto 16px;
+    justify-self: center;
+  }
+  .site-shell .hero-journey .hero-tail {
+    padding-top: 4px;
+    max-width: 490px !important;
+  }
+  .site-shell .hero-journey .hero-description {
+    font-size: clamp(14px, 3.5vw, 16px);
+    max-width: 460px;
+    margin-bottom: 16px;
+    text-wrap: pretty;
+  }
+  .site-shell .hero-journey .hero-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    max-width: 490px;
+    gap: 10px;
+  }
+  .site-shell .hero-journey .hero-actions .btn {
+    width: 100%;
+    justify-content: center;
+    min-height: 51px;
+  }
+  .site-shell .hero-journey .see-memories {
+    width: fit-content;
+    padding: 9px 2px;
+  }
+  .site-shell .hero-journey .hero-bottom {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px 14px;
+    margin-top: 25px;
+  }
+  .site-shell .hero-journey .hero-bottom .hero-memories {display: none;}
+}
+@media (max-width: 390px) {
+  .site-shell .hero-journey .hero-stage {padding-top: 101px;}
+  .site-shell .hero-journey h1 {font-size: clamp(44px, 12.1vw, 51px);}
+  .site-shell .hero-journey .rider-path {margin-top: 15px; margin-bottom: 18px;}
+}
+
+/* Panorama da praia ancorado ao CANVAS do documento. Isso funciona mesmo
+   onde position:sticky/fixed em descendentes sofre com clipping/stacking.
+   A direção horizontal responde ao --mural-loop-x atualizado no scroll. */
+html:has(.site-shell) {
+  background-color: #e9e7db;
+  background-image: url('./assets/praia-rosa-loop.png');
+  background-repeat: repeat;
+  background-size: auto 100vh;
+  background-size: auto 100dvh;
+  background-position: var(--mural-loop-x, 0px) center;
+  background-attachment: fixed;
+}
+body:has(.site-shell) {background: transparent !important;}
+.site-shell {background: transparent !important;}
+
+/* MURAL: a página tem panorama fixo no <html>, e a seção aplica apenas
+   um véu translúcido; não depende de sticky, não termina na 1ª viewport. */
+.site-shell .mural-section {
+  display: block !important;
+  position: relative;
+  z-index: 1;
+  isolation: isolate;
+  overflow: visible !important;
+  padding: 0 !important;
+  background: rgba(250, 247, 238, .58) !important;
+}
+.site-shell .mural-section::before,
+.site-shell .mural-section::after {display:none !important;}
+.site-shell .mural-background-track {display:none !important;}
+.site-shell .mural-content {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  min-width: 0;
+  padding: 80px clamp(18px, 4vw, 58px) 100px;
+}
+.site-shell .coast-transition {position:relative;z-index:2;}
+
+/* Mobile: duas colunas, fotos proporcionais e cards compactos. */
+@media (max-width: 720px) {
+  .site-shell .mural-content {padding: 56px 13px 70px;}
+  .site-shell .masonry-grid {
+    display: block;
+    column-count: 2 !important;
+    column-gap: 12px !important;
+    width: 100%;
+    max-width: none;
+  }
+  .site-shell .memory-card,
+  .site-shell .memory-card:nth-child(6n + 2),
+  .site-shell .memory-card:nth-child(6n + 4) {
+    display: inline-block;
+    width: 100%;
+    max-width: 100%;
+    break-inside: avoid;
+    -webkit-column-break-inside: avoid;
+    margin: 0 0 14px;
+    padding: 8px;
+    border-radius: 13px;
+    transform: rotate(var(--rotation, 0deg));
+  }
+  .site-shell .memory-card::before {width:29px;height:11px;top:-6px;}
+  .site-shell .media-card .media-open,
+  .site-shell .media-open img,
+  .site-shell .media-open video {border-radius: 8px;}
+  .site-shell .media-open img,
+  .site-shell .media-open video {min-height: 95px; max-height: 275px;}
+  .site-shell .media-caption {font-size: 11.5px; line-height: 1.42; margin: 9px 3px 5px; overflow-wrap: anywhere;}
+  .site-shell .card-byline {margin: 9px 3px 6px; font-size: 10px; flex-wrap:wrap; gap: 4px 7px; line-height:1.35;}
+  .site-shell .card-byline span {overflow-wrap: anywhere;}
+  .site-shell .card-byline time {font-size: 9px;}
+  .site-shell .reactions {margin: 0 2px 5px; gap: 4px;}
+  .site-shell .reaction-pill,
+  .site-shell .reaction-more {min-height: 29px; min-width: 29px; padding: 5px 7px; font-size: 12px;}
+  .site-shell .reaction-more {width: 30px; font-size: 16px;}
+  .site-shell .reaction-count {font-size: 10px;}
+  .site-shell .reaction-picker {max-width: min(175px, 43vw); padding: 7px; gap: 3px;}
+  .site-shell .reaction-choice {min-width: 32px; width: 32px; padding: 6px 0; font-size: 16px;}
+  .site-shell .note-card {padding: 10px;}
+  .site-shell .note-content {min-height: 130px; padding: 12px 3px 10px;}
+  .site-shell .note-content p {font-size: clamp(15px, 4vw, 20px); line-height:1.4; overflow-wrap:anywhere;}
+  .site-shell .mural-background-wash {background: rgba(250,247,238,.57);}
+  .site-shell .floating-create {width: 54px; height: 54px; min-width: 54px; padding: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px;}
+  .site-shell .floating-create span {display: none;}
+  .party-dialog:has(> .detail) {width:100vw;max-width:none;height:100dvh;max-height:100dvh;margin:0;border-radius:0;}
+  .party-dialog:has(> .detail) .detail {min-height:100%;padding:64px 18px 24px;display:flex;flex-direction:column;justify-content:center;}
+  .party-dialog:has(> .detail) .detail-media {flex: 0 1 auto;width:100%;max-height:72dvh;border-radius:8px;object-fit:contain;}
+}
+@media (max-width: 360px) {
+  .site-shell .mural-content {padding-left: 10px; padding-right: 10px;}
+  .site-shell .masonry-grid {column-gap: 9px !important;}
+}
+@media (prefers-reduced-motion: reduce) {
+  .site-shell .mural-background-track {transition: none;}
+  .site-shell .mural-background-image {will-change: auto;}
+}
